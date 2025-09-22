@@ -3,5 +3,8 @@
 pub use super::config_channels::Entity as ConfigChannels;
 pub use super::config_queues::Entity as ConfigQueues;
 pub use super::config_queues_to_channels_map::Entity as ConfigQueuesToChannelsMap;
+pub use super::config_skills::Entity as ConfigSkills;
+pub use super::config_users::Entity as ConfigUsers;
 pub use super::interactions::Entity as Interactions;
+pub use super::runtime_interaction_to_skills_map::Entity as RuntimeInteractionToSkillsMap;
 pub use super::runtime_interactions_queues::Entity as RuntimeInteractionsQueues;

@@ -5,5 +5,8 @@ pub mod prelude;
 pub mod config_channels;
 pub mod config_queues;
 pub mod config_queues_to_channels_map;
+pub mod config_skills;
+pub mod config_users;
 pub mod interactions;
+pub mod runtime_interaction_to_skills_map;
 pub mod runtime_interactions_queues;

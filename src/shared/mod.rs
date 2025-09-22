@@ -17,7 +17,10 @@ pub enum IcError {
 impl IntoResponse for IcError {
     fn into_response(self) -> Response {
         let message = match self {
-            IcError::DbError(_) => "database error",
+            IcError::DbError(e) => match e.sql_err() {
+                Some(e) => &*e.to_string(),
+                _ => &*e.to_string(),
+            },
             IcError::StdIoError(_) => "io error",
             IcError::AxumError(_) => "axum error",
         };

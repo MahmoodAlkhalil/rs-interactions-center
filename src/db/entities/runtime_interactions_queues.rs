@@ -7,6 +7,7 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub internal_id: i64,
+    #[sea_orm(unique)]
     pub interaction_internal_id: i64,
     pub queue_internal_id: i64,
     pub queued_at: DateTime,

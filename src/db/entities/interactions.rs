@@ -12,6 +12,15 @@ pub struct Model {
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(has_many = "super::runtime_interaction_to_skills_map::Entity")]
+    RuntimeInteractionToSkillsMap,
+}
+
+impl Related<super::runtime_interaction_to_skills_map::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::RuntimeInteractionToSkillsMap.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

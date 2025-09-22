@@ -41,8 +41,12 @@ async fn init_database_pool() -> Result<DatabaseConnection, IcError> {
 }
 
 async fn start_http_server(api_shared_data: Arc<ApiSharedData>) -> Result<(), IcError> {
-    let app = Router::new().merge(api::queues::routes(Arc::clone(&api_shared_data)));
+    let api_v1 = Router::new()
+        .merge(api::queues::routes(Arc::clone(&api_shared_data)))
+        .merge(api::channels::routes(Arc::clone(&api_shared_data)))
+        .merge(api::skills::routes(Arc::clone(&api_shared_data)));
+    let router = Router::new().nest("/api/v1", api_v1);
     let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, router).await?;
     Ok(())
 }
