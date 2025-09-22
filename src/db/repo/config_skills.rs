@@ -14,13 +14,13 @@ where
     config_skills::Entity::find().all(db).await
 }
 
-pub async fn create<B>(dto: ServiceDto<'_, CreateSkill, B>) -> Result<config_skills::Model, DbErr>
+pub async fn create<B>(dto: &ServiceDto<'_, CreateSkill, B>) -> Result<config_skills::Model, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
     let mut queue = config_skills::ActiveModel::new();
     queue.id = Set(Uuid::new_v4());
-    queue.name = Set(dto.request.name);
+    queue.name = Set(dto.data.as_ref().unwrap().name.clone());
     let result = queue.insert(dto.db).await?;
     Ok(result)
 }

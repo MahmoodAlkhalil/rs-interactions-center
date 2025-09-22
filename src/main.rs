@@ -1,11 +1,14 @@
+use crate::shared::helpers::extract;
 use crate::shared::{ApiSharedData, IcError};
 use axum::routing::get;
 use axum::Router;
+use env_logger::Builder;
 use log::{error, info};
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::sync::Arc;
 use std::time::Duration;
 use thiserror::__private::AsDynError;
+use uuid::Uuid;
 
 mod api;
 mod db;
@@ -16,7 +19,9 @@ mod shared;
 #[tokio::main]
 async fn main() -> Result<(), IcError> {
     dotenv::dotenv().ok();
-    env_logger::init();
+    Builder::new()
+        .format_source_path(Some(std::env::current_dir().unwrap().as_path()).is_some()) // or true for relative paths
+        .init();
     let db_pool = init_database_pool().await?;
     let api_shared_data = ApiSharedData { db_pool };
     let shared_state = Arc::new(api_shared_data);
@@ -36,7 +41,7 @@ async fn init_database_pool() -> Result<DatabaseConnection, IcError> {
         .idle_timeout(Duration::from_secs(8))
         .max_lifetime(Duration::from_secs(8))
         .sqlx_logging(true);
-    let pool = Database::connect(opt).await?;
+    let pool = extract(Uuid::new_v4(), Database::connect(opt).await)?;
     Ok(pool)
 }
 

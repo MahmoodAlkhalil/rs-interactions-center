@@ -1,4 +1,4 @@
-pub mod runtime_interactions_queues;
+pub mod interactions_queues;
 pub mod config_queues;
 pub mod interactions;
 pub mod config_channels;

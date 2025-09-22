@@ -8,18 +8,18 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub internal_id: i64,
     pub id: Uuid,
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::runtime_interaction_to_skills_map::Entity")]
-    RuntimeInteractionToSkillsMap,
+    #[sea_orm(has_many = "super::interaction_to_skills_map::Entity")]
+    InteractionToSkillsMap,
 }
 
-impl Related<super::runtime_interaction_to_skills_map::Entity> for Entity {
+impl Related<super::interaction_to_skills_map::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::RuntimeInteractionToSkillsMap.def()
+        Relation::InteractionToSkillsMap.def()
     }
 }
 

@@ -1,7 +1,7 @@
 use crate::dtos::channels::requests::CreateChannel;
 use crate::dtos::channels::responses::Channel;
 use crate::dtos::queues::responses::Queue;
-use crate::dtos::shared::ServiceDto;
+use crate::dtos::shared::{ApiResponse, ServiceDto};
 use crate::services;
 use crate::shared::{ApiSharedData, IcError};
 use axum::extract::State;
@@ -16,8 +16,10 @@ pub fn routes(api_shared_data: Arc<ApiSharedData>) -> Router {
         .with_state(api_shared_data)
 }
 #[debug_handler]
-async fn get_all(state: State<Arc<ApiSharedData>>) -> Result<axum::Json<Vec<Channel>>, IcError> {
-    services::config_channels::get_all(&state.db_pool).await
+async fn get_all(
+    state: State<Arc<ApiSharedData>>,
+) -> Result<axum::Json<ApiResponse<Vec<Channel>>>, IcError> {
+    services::config_channels::get_all(ServiceDto::new(None, &state.db_pool)).await
 }
 
 #[debug_handler]
@@ -25,9 +27,5 @@ async fn create(
     state: State<Arc<ApiSharedData>>,
     axum::extract::Json(request): axum::extract::Json<CreateChannel>,
 ) -> Result<axum::Json<Queue>, IcError> {
-    services::config_channels::create(ServiceDto {
-        request,
-        db: &state.db_pool,
-    })
-    .await
+    services::config_channels::create(ServiceDto::new(Some(request), &state.db_pool)).await
 }

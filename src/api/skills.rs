@@ -16,7 +16,7 @@ pub fn routes(api_shared_data: Arc<ApiSharedData>) -> Router {
 }
 #[debug_handler]
 async fn get_all(state: State<Arc<ApiSharedData>>) -> Result<axum::Json<Vec<Skill>>, IcError> {
-    services::config_skills::get_all(&state.db_pool).await
+    services::config_skills::get_all(ServiceDto::new(None, &state.db_pool)).await
 }
 
 #[debug_handler]
@@ -24,9 +24,5 @@ async fn create(
     state: State<Arc<ApiSharedData>>,
     axum::extract::Json(request): axum::extract::Json<CreateSkill>,
 ) -> Result<axum::Json<Skill>, IcError> {
-    services::config_skills::create(ServiceDto {
-        request,
-        db: &state.db_pool,
-    })
-    .await
+    services::config_skills::create(ServiceDto::new(Some(request), &state.db_pool)).await
 }

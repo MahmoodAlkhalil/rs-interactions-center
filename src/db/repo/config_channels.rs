@@ -15,14 +15,14 @@ where
 }
 
 pub async fn create<B>(
-    dto: ServiceDto<'_, CreateChannel, B>,
+    dto: &ServiceDto<'_, CreateChannel, B>,
 ) -> Result<config_channels::Model, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
     let mut channel = config_channels::ActiveModel::new();
     channel.id = Set(Uuid::new_v4());
-    channel.name = Set(dto.request.name);
+    channel.name = Set(dto.data.as_ref().unwrap().name.clone());
     let result = channel.insert(dto.db).await?;
     Ok(result)
 }

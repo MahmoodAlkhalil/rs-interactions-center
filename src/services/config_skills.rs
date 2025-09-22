@@ -1,15 +1,21 @@
 use crate::dtos::shared::ServiceDto;
 use crate::dtos::skills::requests::CreateSkill;
-use crate::shared::IcError;
+use crate::shared::helpers::extract;
+use crate::shared::{IcError, NONE};
 use crate::{db, dtos};
 use axum::Json;
 use sea_orm::{ConnectionTrait, TransactionTrait};
 
-pub async fn get_all<T>(db: &T) -> Result<Json<Vec<dtos::skills::responses::Skill>>, IcError>
+pub async fn get_all<B>(
+    request: ServiceDto<'_, NONE, B>,
+) -> Result<Json<Vec<dtos::skills::responses::Skill>>, IcError>
 where
-    T: ConnectionTrait + TransactionTrait,
+    B: ConnectionTrait + TransactionTrait,
 {
-    let skills = db::repo::config_skills::get_all(db).await?;
+    let skills = extract(
+        request.request_id,
+        db::repo::config_skills::get_all(request.db).await,
+    )?;
     let mut response = vec![];
     for skill in skills {
         response.push(dtos::skills::responses::Skill {
@@ -27,7 +33,7 @@ pub async fn create<B>(
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let new_queue = db::repo::config_skills::create(request).await?;
+    let new_queue = extract(request.request_id, db::repo::config_skills::create(&request).await)?;
     let response = dtos::skills::responses::Skill {
         id: new_queue.id,
         name: new_queue.name,
