@@ -1,0 +1,21 @@
+meta {
+  name: Create
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{BASE_URL_V1}}/channels
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name":"Voice"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
