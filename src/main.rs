@@ -1,5 +1,5 @@
 use crate::shared::helpers::extract;
-use crate::shared::{ApiSharedData, IcError};
+use crate::shared::{IcError, SharedState};
 use axum::routing::get;
 use axum::Router;
 use env_logger::Builder;
@@ -23,8 +23,7 @@ async fn main() -> Result<(), IcError> {
         .format_source_path(Some(std::env::current_dir().unwrap().as_path()).is_some()) // or true for relative paths
         .init();
     let db_pool = init_database_pool().await?;
-    let api_shared_data = ApiSharedData { db_pool };
-    let shared_state = Arc::new(api_shared_data);
+    let shared_state = Arc::new(SharedState { db_pool });
     start_http_server(Arc::clone(&shared_state)).await?;
     Ok(())
 }
@@ -45,13 +44,23 @@ async fn init_database_pool() -> Result<DatabaseConnection, IcError> {
     Ok(pool)
 }
 
-async fn start_http_server(api_shared_data: Arc<ApiSharedData>) -> Result<(), IcError> {
+async fn start_http_server(shared_state: Arc<SharedState>) -> Result<(), IcError> {
     let api_v1 = Router::new()
-        .merge(api::queues::routes(Arc::clone(&api_shared_data)))
-        .merge(api::channels::routes(Arc::clone(&api_shared_data)))
-        .merge(api::skills::routes(Arc::clone(&api_shared_data)));
+        .merge(api::queues::routes(Arc::clone(&shared_state)))
+        .merge(api::channels::routes(Arc::clone(&shared_state)))
+        .merge(api::skills::routes(Arc::clone(&shared_state)));
     let router = Router::new().nest("/api/v1", api_v1);
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await?;
-    axum::serve(listener, router).await?;
+    let listener = match tokio::net::TcpListener::bind("0.0.0.0:8080").await {
+        Ok(data) => data,
+        Err(_) => {
+            panic!("failed to bind tcp listener");
+        }
+    };
+    match axum::serve(listener, router).await {
+        Ok(data) => data,
+        Err(e) => {
+            panic!("Failed to start http server");
+        }
+    };
     Ok(())
 }

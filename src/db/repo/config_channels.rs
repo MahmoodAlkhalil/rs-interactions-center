@@ -1,9 +1,10 @@
 use crate::db::entities::config_channels;
+use crate::db::entities::config_channels::{Column, Entity, Model};
 use crate::dtos::channels::requests::CreateChannel;
 use crate::dtos::shared::ServiceDto;
 use sea_orm::{
-    ActiveModelBehavior, ActiveModelTrait, ConnectionTrait, DbErr, EntityTrait, Set,
-    TransactionTrait,
+    ActiveModelBehavior, ActiveModelTrait, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
+    QueryFilter, Set, TransactionTrait,
 };
 use uuid::Uuid;
 
@@ -25,4 +26,14 @@ where
     channel.name = Set(dto.data.as_ref().unwrap().name.clone());
     let result = channel.insert(dto.db).await?;
     Ok(result)
+}
+
+pub async fn find_all_by_uuid<A>(channels_uuids: &[String], db: &A) -> Result<Vec<Model>, DbErr>
+where
+    A: ConnectionTrait + TransactionTrait,
+{
+    Entity::find()
+        .filter(Column::Id.is_in(channels_uuids))
+        .all(db)
+        .await
 }

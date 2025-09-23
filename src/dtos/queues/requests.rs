@@ -7,7 +7,7 @@ pub struct CreateQueue {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct QueueToChannelsMap {
+pub struct QueueToChannelsMapping {
     pub queue_id: Uuid,
-    pub channel_id: Uuid,
+    pub channels: Vec<Uuid>,
 }

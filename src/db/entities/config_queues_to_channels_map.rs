@@ -8,8 +8,8 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub internal_id: i64,
     pub id: Uuid,
-    pub queue_id: i64,
-    pub channel_id: i64,
+    pub queue_internal_id: i64,
+    pub channel_internal_id: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

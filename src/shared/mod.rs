@@ -28,7 +28,7 @@ impl IntoResponse for IcError {
     }
 }
 
-pub struct ApiSharedData {
+pub struct SharedState {
     pub db_pool: DatabaseConnection,
 }
 
