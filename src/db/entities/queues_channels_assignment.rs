@@ -3,45 +3,43 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "interactions_queues")]
+#[sea_orm(schema_name = "core", table_name = "queues_channels_assignment")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub queue_id: Uuid,
     #[sea_orm(primary_key, auto_increment = false)]
-    pub interaction_id: Uuid,
-    pub priority: i32,
-    pub queued_at: DateTimeWithTimeZone,
+    pub channel_id: Uuid,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::config_queues::Entity",
-        from = "Column::QueueId",
-        to = "super::config_queues::Column::Id",
+        belongs_to = "super::channels::Entity",
+        from = "Column::ChannelId",
+        to = "super::channels::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    ConfigQueues,
+    Channels,
     #[sea_orm(
-        belongs_to = "super::interactions::Entity",
-        from = "Column::InteractionId",
-        to = "super::interactions::Column::Id",
+        belongs_to = "super::queues::Entity",
+        from = "Column::QueueId",
+        to = "super::queues::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Interactions,
+    Queues,
 }
 
-impl Related<super::config_queues::Entity> for Entity {
+impl Related<super::channels::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::ConfigQueues.def()
+        Relation::Channels.def()
     }
 }
 
-impl Related<super::interactions::Entity> for Entity {
+impl Related<super::queues::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Interactions.def()
+        Relation::Queues.def()
     }
 }
 

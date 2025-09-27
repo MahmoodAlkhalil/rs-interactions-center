@@ -3,24 +3,27 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "interactions")]
+#[sea_orm(schema_name = "core", table_name = "queues")]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
+    #[sea_orm(primary_key, auto_increment = false, unique)]
     pub id: Uuid,
+    #[sea_orm(column_type = "Text", unique)]
+    pub name: String,
     pub created_at: DateTimeWithTimeZone,
+    pub groups: Option<Vec<Uuid>>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::interactions_skills_assignment::Entity")]
-    InteractionsSkillsAssignment,
+    #[sea_orm(has_many = "super::queues_channels_assignment::Entity")]
+    QueuesChannelsAssignment,
     #[sea_orm(has_many = "super::runtime_interactions_queues::Entity")]
     RuntimeInteractionsQueues,
 }
 
-impl Related<super::interactions_skills_assignment::Entity> for Entity {
+impl Related<super::queues_channels_assignment::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::InteractionsSkillsAssignment.def()
+        Relation::QueuesChannelsAssignment.def()
     }
 }
 
@@ -30,26 +33,26 @@ impl Related<super::runtime_interactions_queues::Entity> for Entity {
     }
 }
 
-impl Related<super::queues::Entity> for Entity {
+impl Related<super::channels::Entity> for Entity {
     fn to() -> RelationDef {
-        super::runtime_interactions_queues::Relation::Queues.def()
+        super::queues_channels_assignment::Relation::Channels.def()
     }
     fn via() -> Option<RelationDef> {
         Some(
-            super::runtime_interactions_queues::Relation::Interactions
+            super::queues_channels_assignment::Relation::Queues
                 .def()
                 .rev(),
         )
     }
 }
 
-impl Related<super::skills::Entity> for Entity {
+impl Related<super::interactions::Entity> for Entity {
     fn to() -> RelationDef {
-        super::interactions_skills_assignment::Relation::Skills.def()
+        super::runtime_interactions_queues::Relation::Interactions.def()
     }
     fn via() -> Option<RelationDef> {
         Some(
-            super::interactions_skills_assignment::Relation::Interactions
+            super::runtime_interactions_queues::Relation::Queues
                 .def()
                 .rev(),
         )

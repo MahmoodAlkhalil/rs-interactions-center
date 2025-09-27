@@ -19,7 +19,7 @@ pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
 async fn get_all(
     state: State<Arc<SharedState>>,
 ) -> Result<axum::Json<ApiResponse<Vec<Channel>>>, IcError> {
-    services::config_channels::get_all(ServiceDto::new(None, &state.db_pool)).await
+    services::channels::get_all(ServiceDto::new(None, &state.db_pool)).await
 }
 
 #[debug_handler]
@@ -27,5 +27,5 @@ async fn create(
     state: State<Arc<SharedState>>,
     axum::extract::Json(request): axum::extract::Json<CreateChannel>,
 ) -> Result<axum::Json<Queue>, IcError> {
-    services::config_channels::create(ServiceDto::new(Some(request), &state.db_pool)).await
+    services::channels::create(ServiceDto::new(Some(request), &state.db_pool)).await
 }

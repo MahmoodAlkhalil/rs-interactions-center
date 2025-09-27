@@ -5,14 +5,42 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(schema_name = "core", table_name = "config_queues_to_channels_map")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub internal_id: i64,
-    pub id: Uuid,
-    pub queue_internal_id: i64,
-    pub channel_internal_id: i64,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub queue_id: Uuid,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub channel_id: Uuid,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::config_channels::Entity",
+        from = "Column::ChannelId",
+        to = "super::config_channels::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    ConfigChannels,
+    #[sea_orm(
+        belongs_to = "super::config_queues::Entity",
+        from = "Column::QueueId",
+        to = "super::config_queues::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    ConfigQueues,
+}
+
+impl Related<super::config_channels::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ConfigChannels.def()
+    }
+}
+
+impl Related<super::config_queues::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ConfigQueues.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

@@ -3,19 +3,23 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "interactions")]
+#[sea_orm(schema_name = "core", table_name = "skills")]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false)]
+    #[sea_orm(primary_key, auto_increment = false, unique)]
     pub id: Uuid,
+    #[sea_orm(column_type = "Text", unique)]
+    pub name: String,
     pub created_at: DateTimeWithTimeZone,
+    pub marked_for_deletion: bool,
+    pub parent_skill_id: Option<Uuid>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(has_many = "super::interactions_skills_assignment::Entity")]
     InteractionsSkillsAssignment,
-    #[sea_orm(has_many = "super::runtime_interactions_queues::Entity")]
-    RuntimeInteractionsQueues,
+    #[sea_orm(has_many = "super::users_skills_assignment::Entity")]
+    UsersSkillsAssignment,
 }
 
 impl Related<super::interactions_skills_assignment::Entity> for Entity {
@@ -24,35 +28,31 @@ impl Related<super::interactions_skills_assignment::Entity> for Entity {
     }
 }
 
-impl Related<super::runtime_interactions_queues::Entity> for Entity {
+impl Related<super::users_skills_assignment::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::RuntimeInteractionsQueues.def()
+        Relation::UsersSkillsAssignment.def()
     }
 }
 
-impl Related<super::queues::Entity> for Entity {
+impl Related<super::interactions::Entity> for Entity {
     fn to() -> RelationDef {
-        super::runtime_interactions_queues::Relation::Queues.def()
+        super::interactions_skills_assignment::Relation::Interactions.def()
     }
     fn via() -> Option<RelationDef> {
         Some(
-            super::runtime_interactions_queues::Relation::Interactions
+            super::interactions_skills_assignment::Relation::Skills
                 .def()
                 .rev(),
         )
     }
 }
 
-impl Related<super::skills::Entity> for Entity {
+impl Related<super::users::Entity> for Entity {
     fn to() -> RelationDef {
-        super::interactions_skills_assignment::Relation::Skills.def()
+        super::users_skills_assignment::Relation::Users.def()
     }
     fn via() -> Option<RelationDef> {
-        Some(
-            super::interactions_skills_assignment::Relation::Interactions
-                .def()
-                .rev(),
-        )
+        Some(super::users_skills_assignment::Relation::Skills.def().rev())
     }
 }
 

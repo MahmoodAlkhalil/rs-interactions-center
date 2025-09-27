@@ -3,11 +3,12 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "config_users")]
+#[sea_orm(schema_name = "core", table_name = "runtime_users")]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = false, unique)]
-    pub id: Uuid,
-    pub created_at: DateTimeWithTimeZone,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub user_id: Uuid,
+    pub state_updated_at: DateTimeWithTimeZone,
+    pub state: Uuid,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

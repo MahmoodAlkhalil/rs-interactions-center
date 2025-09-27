@@ -11,3 +11,14 @@ pub struct QueueToChannelsMapping {
     pub queue_id: Uuid,
     pub channels: Vec<Uuid>,
 }
+
+#[derive(Deserialize, Debug)]
+pub struct EnqueueInteraction {
+    pub interaction_id: Uuid,
+    pub queue_id: Uuid,
+    pub priority: Option<i32>,
+}
+#[derive(Deserialize, Debug)]
+pub struct DequeueInteraction {
+    pub interaction_id: Uuid,
+}

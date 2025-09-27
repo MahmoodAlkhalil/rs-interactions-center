@@ -1,26 +1,25 @@
-use crate::db::repo::config_queues as config_queues_repo;
-use crate::db::repo::config_queues_to_channels_map as config_queues_to_channels_map_repo;
+use crate::db::entities::channels::{Column as ChannelsColumn, Entity as ChannelsEntity};
+use crate::db::entities::queues::*;
+use crate::db::entities::queues_channels_assignment::{
+    Column as QueuesChannelsAssignmentColumn, Entity as QueuesChannelsAssignmentEntity,
+};
 use crate::dtos::queues::requests::{CreateQueue, QueueToChannelsMapping};
+use crate::dtos::queues::responses::Queue as QueueDto;
 use crate::dtos::shared::{ApiResponse, ServiceDto};
 use crate::shared::helpers::extract;
 use crate::shared::{IcError, NONE};
-use crate::{db, dtos};
 use axum::Json;
-use sea_orm::{ConnectionTrait, TransactionTrait};
+use sea_orm::prelude::*;
+use sea_orm::{ConnectionTrait, Set, TransactionTrait};
 
-pub async fn get_all<B>(
-    request: ServiceDto<'_, NONE, B>,
-) -> Result<Json<Vec<dtos::queues::responses::Queue>>, IcError>
+pub async fn get_all<B>(request: ServiceDto<'_, NONE, B>) -> Result<Json<Vec<QueueDto>>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let queues = extract(
-        request.request_id,
-        config_queues_repo::get_all(request.db).await,
-    )?;
-    let mut response: Vec<dtos::queues::responses::Queue> = vec![];
+    let queues = extract(request.request_id, Entity::find().all(request.db).await)?;
+    let mut response: Vec<QueueDto> = vec![];
     for queue in queues {
-        response.push(dtos::queues::responses::Queue {
+        response.push(QueueDto {
             id: queue.id,
             name: queue.name,
             created_at: queue.created_at.to_utc(),
@@ -29,20 +28,18 @@ where
     Ok(Json(response))
 }
 
-pub async fn create<B>(
-    request: ServiceDto<'_, CreateQueue, B>,
-) -> Result<Json<dtos::queues::responses::Queue>, IcError>
+pub async fn create<B>(request: ServiceDto<'_, CreateQueue, B>) -> Result<Json<QueueDto>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let new = extract(
-        request.request_id,
-        config_queues_repo::create(request.data.unwrap(), request.db).await,
-    )?;
-    let response = dtos::queues::responses::Queue {
-        id: new.id,
-        name: new.name,
-        created_at: new.created_at.to_utc(),
+    let mut queue = ActiveModel::new();
+    queue.id = Set(Uuid::now_v7());
+    queue.name = Set(request.data.unwrap().name);
+    let queue = extract(request.request_id, queue.insert(request.db).await)?;
+    let response = QueueDto {
+        id: queue.id,
+        name: queue.name,
+        created_at: queue.created_at.to_utc(),
     };
     Ok(Json(response))
 }
@@ -56,7 +53,8 @@ where
     let transaction = extract(request.request_id, request.db.begin().await)?;
     let data = extract(
         request.request_id,
-        config_queues_repo::find_by_uuid(request.data.as_ref().unwrap().queue_id, &transaction)
+        Entity::find_by_id(request.data.as_ref().unwrap().queue_id)
+            .one(request.db)
             .await,
     )?;
     let queue = match data {
@@ -70,6 +68,7 @@ where
     };
     let req_channels: Vec<String> = request
         .data
+        .as_ref()
         .unwrap()
         .channels
         .iter()
@@ -77,7 +76,10 @@ where
         .collect();
     let db_channels = extract(
         request.request_id,
-        db::repo::config_channels::find_all_by_uuid(&req_channels[..], &transaction).await,
+        ChannelsEntity::find()
+            .filter(ChannelsColumn::Id.is_in(&req_channels[..]))
+            .all(request.db)
+            .await,
     )?;
     for req_channel in &req_channels[..] {
         for db_channel in &db_channels {
@@ -91,11 +93,12 @@ where
     }
     let delete_existing_mappings_result = extract(
         request.request_id,
-        config_queues_to_channels_map_repo::delete_all_by_queue_internal_id(
-            queue.internal_id,
-            &transaction,
-        )
-        .await,
+        QueuesChannelsAssignmentEntity::delete_many()
+            .filter(
+                QueuesChannelsAssignmentColumn::QueueId.contains(request.data.unwrap().queue_id),
+            )
+            .exec(request.db)
+            .await,
     )?;
     Ok(ApiResponse::new_success(request.request_id, None))
 }

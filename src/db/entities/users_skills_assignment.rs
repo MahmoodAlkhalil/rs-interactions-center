@@ -3,43 +3,44 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "interaction_to_skills_map")]
+#[sea_orm(schema_name = "core", table_name = "users_skills_assignment")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub interaction_id: Uuid,
+    pub user_id: Uuid,
     #[sea_orm(primary_key, auto_increment = false)]
     pub skill_id: Uuid,
+    pub proficiency: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::config_skills::Entity",
+        belongs_to = "super::skills::Entity",
         from = "Column::SkillId",
-        to = "super::config_skills::Column::Id",
+        to = "super::skills::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    ConfigSkills,
+    Skills,
     #[sea_orm(
-        belongs_to = "super::interactions::Entity",
-        from = "Column::InteractionId",
-        to = "super::interactions::Column::Id",
+        belongs_to = "super::users::Entity",
+        from = "Column::UserId",
+        to = "super::users::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Interactions,
+    Users,
 }
 
-impl Related<super::config_skills::Entity> for Entity {
+impl Related<super::skills::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::ConfigSkills.def()
+        Relation::Skills.def()
     }
 }
 
-impl Related<super::interactions::Entity> for Entity {
+impl Related<super::users::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Interactions.def()
+        Relation::Users.def()
     }
 }
 

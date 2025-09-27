@@ -3,26 +3,16 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "interactions_queues")]
+#[sea_orm(schema_name = "core", table_name = "interactions_skills_assignment")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub queue_id: Uuid,
-    #[sea_orm(primary_key, auto_increment = false)]
     pub interaction_id: Uuid,
-    pub priority: i32,
-    pub queued_at: DateTimeWithTimeZone,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub skill_id: Uuid,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::config_queues::Entity",
-        from = "Column::QueueId",
-        to = "super::config_queues::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
-    ConfigQueues,
     #[sea_orm(
         belongs_to = "super::interactions::Entity",
         from = "Column::InteractionId",
@@ -31,17 +21,25 @@ pub enum Relation {
         on_delete = "NoAction"
     )]
     Interactions,
-}
-
-impl Related<super::config_queues::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::ConfigQueues.def()
-    }
+    #[sea_orm(
+        belongs_to = "super::skills::Entity",
+        from = "Column::SkillId",
+        to = "super::skills::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Skills,
 }
 
 impl Related<super::interactions::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Interactions.def()
+    }
+}
+
+impl Related<super::skills::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Skills.def()
     }
 }
 

@@ -2,11 +2,17 @@
 
 pub mod prelude;
 
-pub mod config_channels;
-pub mod config_queues;
-pub mod config_queues_to_channels_map;
-pub mod config_skills;
-pub mod config_users;
-pub mod interaction_to_skills_map;
+pub mod channels;
+pub mod groups;
 pub mod interactions;
-pub mod interactions_queues;
+pub mod interactions_skills_assignment;
+pub mod queues;
+pub mod queues_channels_assignment;
+pub mod runtime_interactions_queues;
+pub mod runtime_users;
+pub mod runtime_users_queues;
+pub mod skills;
+pub mod user_states;
+pub mod users;
+pub mod users_queues_assignments;
+pub mod users_skills_assignment;

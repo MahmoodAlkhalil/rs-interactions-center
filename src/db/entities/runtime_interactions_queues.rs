@@ -5,16 +5,44 @@ use sea_orm::entity::prelude::*;
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(schema_name = "core", table_name = "runtime_interactions_queues")]
 pub struct Model {
-    #[sea_orm(primary_key)]
-    pub internal_id: i64,
-    #[sea_orm(unique)]
-    pub interaction_internal_id: i64,
-    pub queue_internal_id: i64,
-    pub queued_at: DateTime,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub queue_id: Uuid,
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub interaction_id: Uuid,
     pub priority: i32,
+    pub queued_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::interactions::Entity",
+        from = "Column::InteractionId",
+        to = "super::interactions::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Interactions,
+    #[sea_orm(
+        belongs_to = "super::queues::Entity",
+        from = "Column::QueueId",
+        to = "super::queues::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Queues,
+}
+
+impl Related<super::interactions::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Interactions.def()
+    }
+}
+
+impl Related<super::queues::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Queues.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

@@ -14,7 +14,7 @@ where
 {
     let skills = extract(
         request.request_id,
-        db::repo::config_skills::get_all(request.db).await,
+        db::repo::skills::get_all_parents(request.db).await,
     )?;
     let mut response = vec![];
     for skill in skills {
@@ -33,7 +33,7 @@ pub async fn create<B>(
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let new_queue = extract(request.request_id, db::repo::config_skills::create(&request).await)?;
+    let new_queue = extract(request.request_id, db::repo::skills::create(&request).await)?;
     let response = dtos::skills::responses::Skill {
         id: new_queue.id,
         name: new_queue.name,
