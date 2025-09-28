@@ -8,18 +8,34 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, unique)]
     pub id: Uuid,
     pub created_at: DateTimeWithTimeZone,
-    pub groups: Vec<Uuid>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::users_groups_assignment::Entity")]
+    UsersGroupsAssignment,
     #[sea_orm(has_many = "super::users_skills_assignment::Entity")]
     UsersSkillsAssignment,
+}
+
+impl Related<super::users_groups_assignment::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::UsersGroupsAssignment.def()
+    }
 }
 
 impl Related<super::users_skills_assignment::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::UsersSkillsAssignment.def()
+    }
+}
+
+impl Related<super::groups::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::users_groups_assignment::Relation::Groups.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(super::users_groups_assignment::Relation::Users.def().rev())
     }
 }
 

@@ -4,3 +4,4 @@ pub mod interactions;
 pub mod users;
 pub mod channels;
 pub mod skills;
+mod groups;

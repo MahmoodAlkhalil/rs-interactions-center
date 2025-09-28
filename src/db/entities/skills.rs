@@ -18,6 +18,8 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::interactions_skills_assignment::Entity")]
     InteractionsSkillsAssignment,
+    #[sea_orm(has_many = "super::skills_groups_assignment::Entity")]
+    SkillsGroupsAssignment,
     #[sea_orm(has_many = "super::users_skills_assignment::Entity")]
     UsersSkillsAssignment,
 }
@@ -28,9 +30,28 @@ impl Related<super::interactions_skills_assignment::Entity> for Entity {
     }
 }
 
+impl Related<super::skills_groups_assignment::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::SkillsGroupsAssignment.def()
+    }
+}
+
 impl Related<super::users_skills_assignment::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::UsersSkillsAssignment.def()
+    }
+}
+
+impl Related<super::groups::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::skills_groups_assignment::Relation::Groups.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(
+            super::skills_groups_assignment::Relation::Skills
+                .def()
+                .rev(),
+        )
     }
 }
 

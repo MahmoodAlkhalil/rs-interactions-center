@@ -16,8 +16,16 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::interactions_channels_assignment::Entity")]
+    InteractionsChannelsAssignment,
     #[sea_orm(has_many = "super::queues_channels_assignment::Entity")]
     QueuesChannelsAssignment,
+}
+
+impl Related<super::interactions_channels_assignment::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::InteractionsChannelsAssignment.def()
+    }
 }
 
 impl Related<super::queues_channels_assignment::Entity> for Entity {

@@ -4,6 +4,7 @@ use crate::dtos::shared::ApiResponse;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
+use log::error;
 use sea_orm::{DatabaseConnection, DbErr};
 use uuid::Uuid;
 
@@ -13,12 +14,28 @@ pub struct IcError {
     pub message: String,
 }
 
-impl From<DbErr> for IcError {
-    fn from(error: DbErr) -> Self {
+#[derive(Debug)]
+pub struct DbErrWithId {
+    pub id: Uuid,
+    pub source: DbErr,
+}
+
+impl From<DbErrWithId> for IcError {
+    fn from(err: DbErrWithId) -> Self {
+        error!("[{}] database error [{}]", err.id, err.source.to_string());
         IcError {
-            id: Default::default(),
-            message: "database error, check logs".to_string(),
+            id: err.id,
+            message: "database error".to_string(),
         }
+    }
+}
+pub trait WithMetadata<T> {
+    fn with_metadata(self, id: Uuid) -> Result<T, IcError>;
+}
+
+impl<T> WithMetadata<T> for Result<T, DbErr> {
+    fn with_metadata(self, id: Uuid) -> Result<T, IcError> {
+        self.map_err(|e| DbErrWithId { id, source: e }.into())
     }
 }
 
@@ -42,4 +59,4 @@ pub struct SharedState {
 }
 
 //Dummy Struct to be used as placeholder for Generic types with Option set to None
-pub struct NONE {}
+pub struct NoType {}

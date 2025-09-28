@@ -1,4 +1,4 @@
-use crate::dtos::shared::ServiceDto;
+use crate::dtos::shared::RequestDto;
 use crate::dtos::skills::requests::CreateSkill;
 use crate::dtos::skills::responses::Skill;
 use crate::services;
@@ -16,7 +16,7 @@ pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
 }
 #[debug_handler]
 async fn get_all(state: State<Arc<SharedState>>) -> Result<axum::Json<Vec<Skill>>, IcError> {
-    services::skills::get_all(ServiceDto::new(None, &state.db_pool)).await
+    services::skills::get_all(RequestDto::new(None, &state.db_pool)).await
 }
 
 #[debug_handler]
@@ -24,5 +24,5 @@ async fn create(
     state: State<Arc<SharedState>>,
     axum::extract::Json(request): axum::extract::Json<CreateSkill>,
 ) -> Result<axum::Json<Skill>, IcError> {
-    services::skills::create(ServiceDto::new(Some(request), &state.db_pool)).await
+    services::skills::create(RequestDto::new(Some(request), &state.db_pool)).await
 }

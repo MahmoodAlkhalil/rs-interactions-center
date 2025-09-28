@@ -1,13 +1,10 @@
-use crate::shared::helpers::extract;
-use crate::shared::{IcError, SharedState};
-use axum::routing::get;
+use crate::shared::{IcError, SharedState, WithMetadata};
 use axum::Router;
 use env_logger::Builder;
-use log::{error, info};
+use log::info;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::sync::Arc;
 use std::time::Duration;
-use thiserror::__private::AsDynError;
 use uuid::Uuid;
 
 mod api;
@@ -20,7 +17,7 @@ mod shared;
 async fn main() -> Result<(), IcError> {
     dotenv::dotenv().ok();
     Builder::new()
-        .format_source_path(Some(std::env::current_dir().unwrap().as_path()).is_some()) // or true for relative paths
+        .format_source_path(Some(std::env::current_dir().unwrap().as_path()).is_some())
         .init();
     let db_pool = init_database_pool().await?;
     let shared_state = Arc::new(SharedState { db_pool });
@@ -40,7 +37,7 @@ async fn init_database_pool() -> Result<DatabaseConnection, IcError> {
         .idle_timeout(Duration::from_secs(8))
         .max_lifetime(Duration::from_secs(8))
         .sqlx_logging(true);
-    let pool = extract(Uuid::new_v4(), Database::connect(opt).await)?;
+    let pool = Database::connect(opt).await.with_metadata(Uuid::new_v4())?;
     Ok(pool)
 }
 

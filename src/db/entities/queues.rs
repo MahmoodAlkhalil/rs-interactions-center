@@ -10,13 +10,14 @@ pub struct Model {
     #[sea_orm(column_type = "Text", unique)]
     pub name: String,
     pub created_at: DateTimeWithTimeZone,
-    pub groups: Option<Vec<Uuid>>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(has_many = "super::queues_channels_assignment::Entity")]
     QueuesChannelsAssignment,
+    #[sea_orm(has_many = "super::queues_groups_assignment::Entity")]
+    QueuesGroupsAssignment,
     #[sea_orm(has_many = "super::runtime_interactions_queues::Entity")]
     RuntimeInteractionsQueues,
 }
@@ -24,6 +25,12 @@ pub enum Relation {
 impl Related<super::queues_channels_assignment::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::QueuesChannelsAssignment.def()
+    }
+}
+
+impl Related<super::queues_groups_assignment::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::QueuesGroupsAssignment.def()
     }
 }
 
@@ -40,6 +47,19 @@ impl Related<super::channels::Entity> for Entity {
     fn via() -> Option<RelationDef> {
         Some(
             super::queues_channels_assignment::Relation::Queues
+                .def()
+                .rev(),
+        )
+    }
+}
+
+impl Related<super::groups::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::queues_groups_assignment::Relation::Groups.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(
+            super::queues_groups_assignment::Relation::Queues
                 .def()
                 .rev(),
         )

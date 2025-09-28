@@ -1,6 +1,6 @@
 use crate::dtos::interactions::requests::CreateInteraction;
 use crate::dtos::interactions::responses::Interaction;
-use crate::dtos::shared::{ApiResponse, ServiceDto};
+use crate::dtos::shared::{ApiResponse, RequestDto};
 use crate::services;
 use crate::shared::{SharedState, IcError};
 use axum::extract::State;
@@ -18,7 +18,7 @@ pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
 async fn get_all(
     state: State<Arc<SharedState>>,
 ) -> Result<axum::Json<Vec<Interaction>>, IcError> {
-    services::interactions::get_all(ServiceDto::new(None, &state.db_pool)).await
+    services::interactions::get_all(RequestDto::new(None, &state.db_pool)).await
 }
 
 #[debug_handler]
@@ -26,5 +26,5 @@ async fn create(
     state: State<Arc<SharedState>>,
     axum::extract::Json(request): axum::extract::Json<CreateInteraction>,
 ) -> Result<axum::Json<ApiResponse<Interaction>>, IcError> {
-    services::interactions::create(ServiceDto::new(Some(request), &state.db_pool)).await
+    services::interactions::create(RequestDto::new(Some(request), &state.db_pool)).await
 }

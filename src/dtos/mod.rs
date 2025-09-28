@@ -4,3 +4,4 @@ pub mod queues;
 pub mod shared;
 pub mod skills;
 pub mod users;
+pub mod groups;
