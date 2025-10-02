@@ -1,6 +1,7 @@
-pub mod helpers;
+pub mod interaction_states;
 
 use crate::dtos::shared::ApiResponse;
+use async_nats::{Client, ConnectError};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -20,6 +21,14 @@ pub struct DbErrWithId {
     pub source: DbErr,
 }
 
+impl From<ConnectError> for IcError {
+    fn from(value: ConnectError) -> Self {
+        IcError {
+            id: Uuid::new_v4(),
+            message: "NATS client connection error".to_owned(),
+        }
+    }
+}
 impl From<DbErrWithId> for IcError {
     fn from(err: DbErrWithId) -> Self {
         error!("[{}] database error [{}]", err.id, err.source.to_string());
@@ -56,6 +65,7 @@ impl IntoResponse for IcError {
 
 pub struct SharedState {
     pub db_pool: DatabaseConnection,
+    pub nats_client: Client,
 }
 
 //Dummy Struct to be used as placeholder for Generic types with Option set to None

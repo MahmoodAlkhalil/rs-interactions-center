@@ -1,11 +1,10 @@
 use crate::db::entities::channels::ActiveModel as ChannelsActiveModel;
 use crate::db::entities::channels::Entity as ChannelsRepo;
-use crate::dtos;
 use crate::dtos::channels::requests::CreateChannel;
 use crate::dtos::channels::responses::Channel as ChannelDto;
 use crate::dtos::shared::{ApiResponse, RequestDto};
 
-use crate::shared::{IcError, WithMetadata, NoType};
+use crate::shared::{IcError, NoType, WithMetadata};
 use axum::Json;
 
 use sea_orm::{
@@ -29,9 +28,10 @@ where
             id: channel.id,
             name: channel.name,
             created_at: channel.created_at.to_utc(),
+            nats_topic_id: channel.nats_topic_id,
         })
     }
-    Ok(Json(ApiResponse::new_success(request.id, None)))
+    Ok(Json(ApiResponse::new_success(request.id, Some(response))))
 }
 
 pub async fn create<B>(
@@ -40,13 +40,14 @@ pub async fn create<B>(
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let mut new_channel = ChannelsActiveModel::new();
-    new_channel.id = Set(Uuid::now_v7());
-    new_channel.name = Set(request.data.unwrap().name);
-    let new_queue = new_channel.insert(request.db).await.with_metadata(request.id)?;
+    let mut channel = ChannelsActiveModel::new();
+    channel.id = Set(Uuid::now_v7());
+    channel.name = Set(request.data.unwrap().name);
+    let channel = channel.insert(request.db).await.with_metadata(request.id)?;
     Ok(Json(ChannelDto {
-        id: new_queue.id,
-        name: new_queue.name,
-        created_at: new_queue.created_at.to_utc(),
+        id: channel.id,
+        name: channel.name,
+        created_at: channel.created_at.to_utc(),
+        nats_topic_id: channel.nats_topic_id,
     }))
 }

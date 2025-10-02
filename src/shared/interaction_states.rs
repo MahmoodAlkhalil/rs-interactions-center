@@ -3,7 +3,7 @@ use sea_orm::entity::prelude::*;
 // Using the derive macro
 #[derive(Clone, Debug, PartialEq, EnumIter, DeriveActiveEnum, Eq)]
 #[sea_orm(rs_type = "i32", db_type = "Integer", enum_name = "id")]
-pub enum InteractionStatesEnum {
+pub enum InteractionStates {
     #[sea_orm(num_value = 0)]
     New,
     #[sea_orm(num_value = 1000)]

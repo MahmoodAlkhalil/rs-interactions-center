@@ -4,6 +4,7 @@ pub mod prelude;
 
 pub mod channels;
 pub mod groups;
+pub mod interaction_states;
 pub mod interactions;
 pub mod interactions_channels_assignment;
 pub mod interactions_skills_assignment;
@@ -20,4 +21,3 @@ pub mod users;
 pub mod users_groups_assignment;
 pub mod users_queues_assignments;
 pub mod users_skills_assignment;
-mod interaction_states;
