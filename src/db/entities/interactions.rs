@@ -3,27 +3,34 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "interactions")]
+#[sea_orm(table_name = "interactions")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     pub created_at: DateTimeWithTimeZone,
     pub state: i32,
+    pub channel_id: Uuid,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_one = "super::interactions_channels_assignment::Entity")]
-    InteractionsChannelsAssignment,
+    #[sea_orm(
+        belongs_to = "super::channels::Entity",
+        from = "Column::ChannelId",
+        to = "super::channels::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Channels,
     #[sea_orm(has_many = "super::interactions_skills_assignment::Entity")]
     InteractionsSkillsAssignment,
     #[sea_orm(has_many = "super::runtime_interactions_queues::Entity")]
     RuntimeInteractionsQueues,
 }
 
-impl Related<super::interactions_channels_assignment::Entity> for Entity {
+impl Related<super::channels::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::InteractionsChannelsAssignment.def()
+        Relation::Channels.def()
     }
 }
 

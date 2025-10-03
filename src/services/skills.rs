@@ -2,7 +2,7 @@ use crate::db::entities::skills::*;
 use crate::dtos::shared::RequestDto;
 use crate::dtos::skills::requests::CreateSkill;
 use crate::dtos::skills::responses::Skill as SkillDto;
-use crate::shared::{IcError, NoType, WithMetadata};
+use crate::shared::errors::{IcError, NoType, WithMetadata};
 use axum::Json;
 use sea_orm::{
     ActiveModelBehavior, ActiveModelTrait, ColumnTrait, ConnectionTrait, EntityTrait, QueryFilter,

@@ -6,7 +6,6 @@ pub mod channels;
 pub mod groups;
 pub mod interaction_states;
 pub mod interactions;
-pub mod interactions_channels_assignment;
 pub mod interactions_skills_assignment;
 pub mod queues;
 pub mod queues_channels_assignment;

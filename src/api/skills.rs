@@ -2,11 +2,12 @@ use crate::dtos::shared::RequestDto;
 use crate::dtos::skills::requests::CreateSkill;
 use crate::dtos::skills::responses::Skill;
 use crate::services;
-use crate::shared::{SharedState, IcError};
+use crate::shared::errors::{ IcError};
 use axum::extract::State;
 use axum::routing::{get, post};
 use axum::{debug_handler, Router};
 use std::sync::Arc;
+use crate::shared::SharedState;
 
 pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
     Router::new()

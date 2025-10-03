@@ -4,7 +4,6 @@ pub use super::channels::Entity as Channels;
 pub use super::groups::Entity as Groups;
 pub use super::interaction_states::Entity as InteractionStates;
 pub use super::interactions::Entity as Interactions;
-pub use super::interactions_channels_assignment::Entity as InteractionsChannelsAssignment;
 pub use super::interactions_skills_assignment::Entity as InteractionsSkillsAssignment;
 pub use super::queues::Entity as Queues;
 pub use super::queues_channels_assignment::Entity as QueuesChannelsAssignment;

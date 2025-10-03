@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "channels")]
+#[sea_orm(table_name = "channels")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, unique)]
     pub id: Uuid,
@@ -17,15 +17,15 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::interactions_channels_assignment::Entity")]
-    InteractionsChannelsAssignment,
+    #[sea_orm(has_many = "super::interactions::Entity")]
+    Interactions,
     #[sea_orm(has_many = "super::queues_channels_assignment::Entity")]
     QueuesChannelsAssignment,
 }
 
-impl Related<super::interactions_channels_assignment::Entity> for Entity {
+impl Related<super::interactions::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::InteractionsChannelsAssignment.def()
+        Relation::Interactions.def()
     }
 }
 

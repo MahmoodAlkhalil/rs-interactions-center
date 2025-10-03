@@ -3,9 +3,9 @@ use crate::db::entities::interactions::{
 };
 use crate::db::entities::queues::{Column as QueuesColumns, Entity as QueuesEntity};
 use crate::db::entities::runtime_interactions_queues::ActiveModel as RuntimeInteractionsQueuesActiveModel;
-use crate::dtos::queues::requests::EnqueueInteractionDto;
+use crate::dtos::queues::requests::EnqueueInteraction;
 use crate::dtos::shared::{ApiResponse, RequestDto};
-use crate::shared::{IcError, NoType, WithMetadata};
+use crate::shared::errors::{IcError, NoType, WithMetadata};
 use axum::Json;
 use sea_orm::{
     ActiveModelBehavior, ActiveModelTrait, ConnectionTrait, EntityTrait, QuerySelect, Set,
@@ -13,7 +13,7 @@ use sea_orm::{
 };
 
 pub async fn enqueue<B>(
-    request: RequestDto<'_, EnqueueInteractionDto, B>,
+    request: RequestDto<'_, EnqueueInteraction, B>,
 ) -> Result<Json<ApiResponse<NoType>>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,

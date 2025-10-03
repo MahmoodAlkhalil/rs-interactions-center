@@ -4,15 +4,18 @@ use crate::db::entities::queues_channels_assignment::{
     ActiveModel as QueuesChannelsAssignmentActiveModel, Column as QueuesChannelsAssignmentColumn,
     Entity as QueuesChannelsAssignmentEntity,
 };
-use crate::dtos::queues::requests::{CreateQueue, QueueToChannelsMapping};
+use crate::dtos::queues::requests::{CreateQueue, EnqueueInteraction, QueueToChannelsMapping};
 use crate::dtos::queues::responses::Queue as QueueDto;
 use crate::dtos::shared::{ApiResponse, RequestDto};
-use crate::shared::{IcError, NoType, WithMetadata};
+use crate::shared::errors::{IcError, NoType, WithMetadata};
+use crate::shared::interaction_states::{validate_state_change, InteractionStates};
 use axum::Json;
 use sea_orm::prelude::*;
 use sea_orm::{ConnectionTrait, QuerySelect, Set, TransactionTrait};
 
-pub async fn get_all<B>(request: RequestDto<'_, NoType, B>) -> Result<Json<Vec<QueueDto>>, IcError>
+pub async fn get_all<B>(
+    request: &RequestDto<'_, NoType, B>,
+) -> Result<ApiResponse<Vec<QueueDto>>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
@@ -20,15 +23,13 @@ where
         .all(request.db)
         .await
         .with_metadata(request.id)?;
-    let mut response: Vec<QueueDto> = vec![];
-    for queue in queues {
-        response.push(QueueDto {
-            id: queue.id,
-            name: queue.name,
-            created_at: queue.created_at.to_utc(),
-        })
-    }
-    Ok(Json(response))
+    let response: Vec<QueueDto> = queues.iter().map(|q| q.try_into().unwrap()).collect();
+    Ok(ApiResponse {
+        id: request.id,
+        message: "SUCCESS".to_string(),
+        code: 0,
+        data: Some(response),
+    })
 }
 
 pub async fn create<B>(request: RequestDto<'_, CreateQueue, B>) -> Result<Json<QueueDto>, IcError>
@@ -88,4 +89,36 @@ where
     Ok(ApiResponse::new_success(request.id, None))
 }
 
+pub async fn enqueue_interaction<B>(
+    request: &RequestDto<'_, EnqueueInteraction, B>,
+) -> Result<(), IcError>
+where
+    B: ConnectionTrait + TransactionTrait,
+{
+    let tx = request.db.begin().await.with_metadata(request.id)?;
+    let interaction = crate::db::entities::interactions::Entity::find_by_id(
+        request.data.as_ref().unwrap().interaction_id,
+    )
+    .one(&tx)
+    .await
+    .with_metadata(request.id)?
+    .ok_or(IcError {
+        id: request.id,
+        message: "interaction not found".to_string(),
+    })?;
+    let queue = QueuesEntity::find_by_id(request.data.as_ref().unwrap().queue_id)
+        .one(&tx)
+        .await
+        .with_metadata(request.id)?
+        .ok_or(IcError {
+            id: request.id,
+            message: "queue not found".to_string(),
+        })?;
+    validate_state_change(
+        interaction.state.try_into().unwrap(),
+        InteractionStates::Enqueued,
+    )
+    .with_metadata(request.id)?;
 
+    Ok(())
+}

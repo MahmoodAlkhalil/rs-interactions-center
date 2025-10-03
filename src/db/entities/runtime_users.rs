@@ -3,15 +3,44 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "runtime_users")]
+#[sea_orm(table_name = "runtime_users")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub user_id: Uuid,
+    pub id: Uuid,
+    pub state: i32,
     pub state_updated_at: DateTimeWithTimeZone,
-    pub state: Uuid,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        belongs_to = "super::user_states::Entity",
+        from = "Column::State",
+        to = "super::user_states::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    UserStates,
+    #[sea_orm(
+        belongs_to = "super::users::Entity",
+        from = "Column::Id",
+        to = "super::users::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Users,
+}
+
+impl Related<super::user_states::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::UserStates.def()
+    }
+}
+
+impl Related<super::users::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Users.def()
+    }
+}
 
 impl ActiveModelBehavior for ActiveModel {}

@@ -3,19 +3,29 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(schema_name = "core", table_name = "users")]
+#[sea_orm(table_name = "users")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, unique)]
     pub id: Uuid,
     pub created_at: DateTimeWithTimeZone,
+    #[sea_orm(column_type = "Text")]
+    pub name: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_one = "super::runtime_users::Entity")]
+    RuntimeUsers,
     #[sea_orm(has_many = "super::users_groups_assignment::Entity")]
     UsersGroupsAssignment,
     #[sea_orm(has_many = "super::users_skills_assignment::Entity")]
     UsersSkillsAssignment,
+}
+
+impl Related<super::runtime_users::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::RuntimeUsers.def()
+    }
 }
 
 impl Related<super::users_groups_assignment::Entity> for Entity {

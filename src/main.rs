@@ -1,4 +1,5 @@
-use crate::shared::{IcError, SharedState, WithMetadata};
+use crate::shared::errors::{IcError, WithMetadata};
+use crate::shared::SharedState;
 use async_nats::Client;
 use axum::Router;
 use env_logger::Builder;
@@ -54,7 +55,9 @@ async fn start_http_server(shared_state: Arc<SharedState>) -> Result<(), IcError
     let api_v1 = Router::new()
         .merge(api::queues::routes(Arc::clone(&shared_state)))
         .merge(api::channels::routes(Arc::clone(&shared_state)))
-        .merge(api::skills::routes(Arc::clone(&shared_state)));
+        .merge(api::skills::routes(Arc::clone(&shared_state)))
+        .merge(api::interactions::routes(Arc::clone(&shared_state)));
+
     let router = Router::new().nest("/api/v1", api_v1);
     let listener = match tokio::net::TcpListener::bind("0.0.0.0:8080").await {
         Ok(data) => data,
