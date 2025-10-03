@@ -1,0 +1,21 @@
+meta {
+  name: Create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{BASE_URL_V1}}/interactions
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "channel_id":"01999e3c-a59d-75e2-a73e-5898a5ef729d"
+  }
+}
+
+settings {
+  encodeUrl: true
+}
