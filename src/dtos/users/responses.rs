@@ -8,26 +8,22 @@ pub struct User {
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl TryFrom<UsersModel> for User {
-    type Error = ();
-
-    fn try_from(value: UsersModel) -> Result<Self, Self::Error> {
-        Ok(User {
+impl From<UsersModel> for User {
+    fn from(value: UsersModel) -> Self {
+        User {
             id: value.id,
             name: value.name,
             created_at: value.created_at.to_utc(),
-        })
+        }
     }
 }
 
-impl TryFrom<&UsersModel> for User {
-    type Error = ();
-
-    fn try_from(value: &UsersModel) -> Result<Self, Self::Error> {
-        Ok(User {
+impl From<&UsersModel> for User {
+    fn from(value: &UsersModel) -> Self {
+        User {
             id: value.id,
             name: value.name.clone(),
             created_at: value.created_at.to_utc(),
-        })
+        }
     }
 }

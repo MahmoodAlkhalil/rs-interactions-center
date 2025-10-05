@@ -12,7 +12,7 @@ use std::sync::Arc;
 pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
     Router::new()
         .route("/users", get(get_all))
-        .route("/queues", post(create))
+        .route("/users", post(create))
         .with_state(api_shared_data)
 }
 #[debug_handler]
@@ -20,7 +20,10 @@ async fn get_all(
     state: State<Arc<SharedState>>,
 ) -> Result<Json<ApiResponse<Vec<UserDto>>>, IcError> {
     let dto = RequestDto::new(None, &state.db_pool);
-    Ok(Json(UsersService::get_all(&dto).await?))
+    Ok(Json(ApiResponse::new_success(
+        dto.id,
+        Some(UsersService::get_all(&dto).await?),
+    )))
 }
 
 #[debug_handler]
@@ -29,5 +32,8 @@ async fn create(
     Json(request): Json<CreateUser>,
 ) -> Result<Json<ApiResponse<UserDto>>, IcError> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
-    Ok(Json(UsersService::create(&dto).await?))
+    Ok(Json(ApiResponse::new_success(
+        dto.id,
+        Some(UsersService::create(&dto).await?),
+    )))
 }

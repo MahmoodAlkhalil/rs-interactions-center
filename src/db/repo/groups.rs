@@ -1,6 +1,4 @@
-use crate::db::entities::interactions::ActiveModel;
-use crate::db::entities::interactions::Entity;
-use crate::db::entities::interactions::Model;
+use crate::db::entities::groups::{ActiveModel, Entity, Model};
 use sea_orm::{
     ActiveModelTrait, ConnectionTrait, DbErr, DeleteResult, EntityTrait, TransactionTrait,
 };
@@ -10,9 +8,7 @@ pub async fn find_by_id<B>(id: Uuid, db: &B) -> Result<Option<Model>, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Entity::find_by_id(id)
-        .one(db)
-        .await
+    Entity::find_by_id(id).one(db).await
 }
 
 pub async fn find_all<B>(db: &B) -> Result<Vec<Model>, DbErr>

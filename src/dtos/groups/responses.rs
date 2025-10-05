@@ -6,24 +6,20 @@ pub struct Group {
     pub created_at: chrono::DateTime<chrono::Utc>,
 }
 
-impl TryFrom<GroupsModel> for Group {
-    type Error = ();
-
-    fn try_from(value: GroupsModel) -> Result<Self, Self::Error> {
-        Ok(Group {
+impl From<GroupsModel> for Group {
+    fn from(value: GroupsModel) -> Self {
+        Group {
             id: value.id,
             created_at: value.created_at.to_utc(),
-        })
+        }
     }
 }
 
-impl TryFrom<&GroupsModel> for Group {
-    type Error = ();
-
-    fn try_from(value: &GroupsModel) -> Result<Self, Self::Error> {
-        Ok(Group {
+impl From<&GroupsModel> for Group {
+    fn from(value: &GroupsModel) -> Self {
+        Group {
             id: value.id,
             created_at: value.created_at.to_utc(),
-        })
+        }
     }
 }

@@ -20,13 +20,8 @@ async fn get_all(
     state: State<Arc<SharedState>>,
 ) -> Result<Json<ApiResponse<Vec<Interaction>>>, IcError> {
     let dto = RequestDto::new(None, &state.db_pool);
-    let result = services::interactions::get_all(&dto).await?;
-    Ok(Json(ApiResponse {
-        id: dto.id,
-        message: "SUCCESS".to_string(),
-        code: 0,
-        data: Some(result),
-    }))
+    let response = services::interactions::get_all(&dto).await?;
+    Ok(Json(ApiResponse::new_success(dto.id, Some(response))))
 }
 
 #[debug_handler]
@@ -35,11 +30,6 @@ async fn create(
     Json(request): Json<CreateInteraction>,
 ) -> Result<axum::Json<ApiResponse<Interaction>>, IcError> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
-    let result = services::interactions::create(&dto).await?;
-    Ok(Json(ApiResponse {
-        id: dto.id,
-        message: "SUCCESS".to_string(),
-        code: 0,
-        data: Some(result),
-    }))
+    let response = services::interactions::create(&dto).await?;
+    Ok(Json(ApiResponse::new_success(dto.id, Some(response))))
 }

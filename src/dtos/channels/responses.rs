@@ -10,27 +10,23 @@ pub struct Channel {
     pub nats_topic_id: i64,
 }
 
-impl TryFrom<Model> for Channel {
-    type Error = ();
-
-    fn try_from(value: Model) -> Result<Self, Self::Error> {
-        Ok(Channel {
+impl From<Model> for Channel {
+    fn from(value: Model) -> Self {
+        Channel {
             id: value.id,
             name: value.name,
             created_at: value.created_at.to_utc(),
             nats_topic_id: value.nats_topic_id,
-        })
+        }
     }
 }
-impl TryFrom<&Model> for Channel {
-    type Error = ();
-
-    fn try_from(value: &Model) -> Result<Self, Self::Error> {
-        Ok(Channel {
+impl From<&Model> for Channel {
+    fn from(value: &Model) -> Self {
+        Channel {
             id: value.id,
             name: value.name.clone(),
             created_at: value.created_at.to_utc(),
             nats_topic_id: value.nats_topic_id,
-        })
+        }
     }
 }

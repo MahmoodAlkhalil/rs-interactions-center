@@ -1,4 +1,3 @@
-use crate::api::interactions::IcError;
 use log::info;
 use std::fmt::{Display, Formatter};
 
