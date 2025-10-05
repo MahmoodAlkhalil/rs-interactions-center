@@ -3,7 +3,7 @@ use crate::dtos::queues::responses::Queue;
 use crate::dtos::shared::{ApiResponse, RequestDto};
 use crate::services::queues as QueuesService;
 use crate::utils::axum::RequestId;
-use crate::utils::common::ToApiResponse;
+use crate::dtos::shared::ToApiResponse;
 use crate::utils::errors::NoType;
 use crate::utils::SharedState;
 use axum::extract::State;
@@ -44,8 +44,8 @@ async fn enqueue_interaction(
     state: State<Arc<SharedState>>,
     RequestId(request_id): RequestId,
     Json(request): Json<EnqueueInteraction>,
-) -> Json<ApiResponse<NoType>> {
+) -> ApiResponse<()> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
     let response = QueuesService::enqueue_interaction(&dto).await;
-    Json(response.to_api_response())
+    response.to_api_response()
 }

@@ -22,7 +22,7 @@ pub async fn get_by_id<B>(request: &RequestDto<'_, Uuid, B>) -> Result<ChannelDt
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Ok(ChannelsRepo::find_by_id(request.data.unwrap(), request.db)
+    Ok(ChannelsRepo::find_by_id(request.request.unwrap(), request.db)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,
@@ -37,7 +37,7 @@ where
 {
     let mut channel = ChannelsActiveModel::new();
     channel.id = Set(Uuid::now_v7());
-    channel.name = Set(request.data.as_ref().unwrap().name.clone());
+    channel.name = Set(request.request.as_ref().unwrap().name.clone());
     let channel = ChannelsRepo::insert(channel, request.db).await?;
     Ok(channel.into())
 }

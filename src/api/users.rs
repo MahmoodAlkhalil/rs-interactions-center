@@ -3,7 +3,7 @@ use crate::dtos::users::requests::CreateUser;
 use crate::dtos::users::responses::User as UserDto;
 use crate::services::users as UsersService;
 use crate::utils::axum::RequestId;
-use crate::utils::common::ToApiResponse;
+use crate::dtos::shared::ToApiResponse;
 use crate::utils::SharedState;
 use axum::extract::State;
 use axum::routing::{get, post};

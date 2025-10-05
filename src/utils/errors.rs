@@ -57,9 +57,5 @@ impl From<ConnectError> for IcError {
         }
     }
 }
-
-pub trait WithMetadata<T> {
-    fn with_metadata(self, id: Uuid) -> Result<T, IcError>;
-}
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NoType {}

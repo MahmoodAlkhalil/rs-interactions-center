@@ -28,7 +28,7 @@ where
     Ok(QueuesRepo::insert(
         QueuesActiveModel {
             id: Set(Uuid::now_v7()),
-            name: Set(request.data.as_ref().unwrap().name.clone()),
+            name: Set(request.request.as_ref().unwrap().name.clone()),
             ..Default::default()
         },
         request.db,
@@ -45,7 +45,7 @@ where
 {
     let tx = request.db.begin().await?;
     let queue_with_channels =
-        QueuesRepo::find_queue_with_assigned_channels(request.data.as_ref().unwrap().queue_id, &tx)
+        QueuesRepo::find_queue_with_assigned_channels(request.request.as_ref().unwrap().queue_id, &tx)
             .await
             .into_iter()
             .next()
@@ -61,8 +61,8 @@ where
             })?;
 
     let channels =
-        ChannelsRepo::find_all_by_ids(request.data.as_ref().unwrap().channels.clone(), &tx).await?;
-    if channels.len() != request.data.as_ref().unwrap().channels.len() {
+        ChannelsRepo::find_all_by_ids(request.request.as_ref().unwrap().channels.clone(), &tx).await?;
+    if channels.len() != request.request.as_ref().unwrap().channels.len() {
         return Err(IcError {
             status_code: StatusCode::BAD_REQUEST,
             message: "One or more channels not found".to_string(),
@@ -82,7 +82,7 @@ where
     .await?;
     QueuesRepo::insert_queue_to_channel_assignment(
         queue_with_channels.0.id,
-        request.data.as_ref().unwrap().channels.clone(),
+        request.request.as_ref().unwrap().channels.clone(),
         &tx,
     )
     .await?;
@@ -92,19 +92,19 @@ where
 
 pub async fn enqueue_interaction<B>(
     request: &RequestDto<'_, EnqueueInteraction, B>,
-) -> Result<NoType, IcError>
+) -> Result<(), IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
     let tx = request.db.begin().await?;
     let interaction =
-        InteractionsRepo::find_by_id(request.data.as_ref().unwrap().interaction_id, request.db)
+        InteractionsRepo::find_by_id(request.request.as_ref().unwrap().interaction_id, request.db)
             .await?
             .ok_or(IcError {
                 status_code: StatusCode::BAD_REQUEST,
                 message: "Interaction not found".to_string(),
             })?;
-    let queue = QueuesRepo::find_by_id(request.data.as_ref().unwrap().queue_id, request.db)
+    let queue = QueuesRepo::find_by_id(request.request.as_ref().unwrap().queue_id, request.db)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,
@@ -114,5 +114,5 @@ where
         interaction.state.try_into().unwrap(),
         InteractionStates::Enqueued,
     )?;
-    Ok(NoType {})
+    Ok(())
 }

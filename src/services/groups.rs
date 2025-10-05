@@ -15,7 +15,7 @@ where
     let group = GroupsRepo::insert(
         GroupsActiveModel {
             id: Set(Uuid::now_v7()),
-            name: Set(request.data.as_ref().unwrap().name.clone()),
+            name: Set(request.request.as_ref().unwrap().name.clone()),
             mark_for_delete: Set(false),
             ..Default::default()
         },
@@ -40,7 +40,7 @@ pub async fn get_by_id<B>(request: &RequestDto<'_, Uuid, B>) -> Result<GroupDto,
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Ok(GroupsRepo::find_by_id(request.data.unwrap(), request.db)
+    Ok(GroupsRepo::find_by_id(request.request.unwrap(), request.db)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,

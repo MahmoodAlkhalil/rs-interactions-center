@@ -34,7 +34,7 @@ where
     B: ConnectionTrait + TransactionTrait,
 {
     let tx = request.db.begin().await?;
-    ChannelsEntity::find_by_id(request.data.as_ref().unwrap().channel_id)
+    ChannelsEntity::find_by_id(request.request.as_ref().unwrap().channel_id)
         .one(&tx)
         .await?
         .ok_or(IcError {
@@ -43,7 +43,7 @@ where
         })?;
     let mut interaction = ActiveModel::new();
     interaction.id = Set(Uuid::now_v7());
-    interaction.channel_id = Set(request.data.as_ref().unwrap().channel_id);
+    interaction.channel_id = Set(request.request.as_ref().unwrap().channel_id);
     let interaction = interaction.insert(&tx).await?;
     tx.commit().await?;
     Ok(interaction.into())

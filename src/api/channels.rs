@@ -3,7 +3,7 @@ use crate::dtos::channels::responses::Channel as ChannelDto;
 use crate::dtos::shared::{ApiResponse, RequestDto};
 use crate::services;
 use crate::utils::axum::RequestId;
-use crate::utils::common::ToApiResponse;
+use crate::dtos::shared::ToApiResponse;
 use crate::utils::SharedState;
 use axum::extract::{Path, State};
 use axum::routing::{get, post};

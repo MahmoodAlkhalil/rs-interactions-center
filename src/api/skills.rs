@@ -3,7 +3,7 @@ use crate::dtos::skills::requests::CreateSkill;
 use crate::dtos::skills::responses::Skill;
 use crate::services;
 use crate::utils::axum::RequestId;
-use crate::utils::common::ToApiResponse;
+use crate::dtos::shared::ToApiResponse;
 use crate::utils::SharedState;
 use axum::extract::State;
 use axum::routing::{get, post};

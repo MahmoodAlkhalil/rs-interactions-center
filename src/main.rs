@@ -1,5 +1,5 @@
 use crate::utils::axum::RequestIdLayer;
-use crate::utils::errors::{IcError, WithMetadata};
+use crate::utils::errors::IcError;
 use crate::utils::SharedState;
 use async_nats::Client;
 use axum::Router;

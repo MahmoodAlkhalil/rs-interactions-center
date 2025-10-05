@@ -23,7 +23,7 @@ where
 {
     let mut user = UsersActiveModel::new();
     user.id = Set(Uuid::now_v7());
-    user.name = Set(request.data.as_ref().unwrap().name.clone());
+    user.name = Set(request.request.as_ref().unwrap().name.clone());
     let user = user.insert(request.db).await?;
     Ok(user.into())
 }

@@ -27,7 +27,7 @@ where
 {
     let mut skill = ActiveModel::new();
     skill.id = Set(Uuid::now_v7());
-    skill.name = Set(request.data.as_ref().unwrap().name.to_owned());
+    skill.name = Set(request.request.as_ref().unwrap().name.to_owned());
     let skill = skill.insert(request.db).await?;
     Ok(skill.into())
 }
