@@ -9,11 +9,11 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
-pub async fn find_by_id<B>(id: &Uuid, db: &B) -> Result<Option<Model>, DbErr>
+pub async fn find_by_id<B>(id: Uuid, db: &B) -> Result<Option<Model>, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Entity::find_by_id(*id).one(db).await
+    Entity::find_by_id(id).one(db).await
 }
 
 pub async fn find_all<B>(db: &B) -> Result<Vec<Model>, DbErr>
@@ -38,13 +38,13 @@ where
 }
 
 pub async fn find_queue_with_assigned_channels<B>(
-    id: &Uuid,
+    id: Uuid,
     db: &B,
 ) -> Result<Vec<(Model, Vec<QueuesChannelsAssignmentModel>)>, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Entity::find_by_id(*id)
+    Entity::find_by_id(id)
         .find_with_related(QueuesChannelsAssignmentEntity)
         .all(db)
         .await
@@ -66,7 +66,7 @@ where
 }
 
 pub async fn insert_queue_to_channel_assignment<B>(
-    queue_id: &Uuid,
+    queue_id: Uuid,
     channels_ids: &Vec<Uuid>,
     db: &B,
 ) -> Result<Vec<(Uuid, Uuid)>, DbErr>

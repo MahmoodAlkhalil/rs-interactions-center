@@ -22,7 +22,7 @@ pub async fn get_by_id<B>(request: &RequestDto<'_, Uuid, B>) -> Result<ChannelDt
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Ok(ChannelsRepo::find_by_id(&request.request.unwrap(), request.db)
+    Ok(ChannelsRepo::find_by_id(request.request.unwrap(), request.db)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,

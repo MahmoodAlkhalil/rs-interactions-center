@@ -5,11 +5,11 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
-pub async fn find_by_id<B>(id: &Uuid, db: &B) -> Result<Option<Model>, DbErr>
+pub async fn find_by_id<B>(id: Uuid, db: &B) -> Result<Option<Model>, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Entity::find_by_id(*id).one(db).await
+    Entity::find_by_id(id).one(db).await
 }
 
 pub async fn find_all<B>(db: &B) -> Result<Vec<Model>, DbErr>
