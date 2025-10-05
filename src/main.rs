@@ -1,27 +1,28 @@
-use crate::shared::errors::{IcError, WithMetadata};
-use crate::shared::SharedState;
+use crate::utils::axum::RequestIdLayer;
+use crate::utils::errors::{IcError, WithMetadata};
+use crate::utils::SharedState;
 use async_nats::Client;
 use axum::Router;
-use env_logger::Builder;
-use log::info;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
+use tracing::info;
 use uuid::Uuid;
-use crate::shared::axum::RequestIdLayer;
 
 mod api;
 mod db;
 mod dtos;
 mod services;
-mod shared;
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), IcError> {
     dotenv::dotenv().ok();
-    Builder::new()
-        .format_source_path(Some(std::env::current_dir().unwrap().as_path()).is_some())
+    tracing_subscriber::fmt()
+        .json()
+        .with_current_span(true)
+        .with_span_list(false)
         .init();
     let db_pool = init_database_pool().await?;
     let nats_client = init_nats_client().await?;
@@ -42,7 +43,7 @@ async fn init_database_pool() -> Result<DatabaseConnection, IcError> {
         .idle_timeout(Duration::from_secs(8))
         .max_lifetime(Duration::from_secs(8))
         .sqlx_logging(true);
-    let pool = Database::connect(opt).await.with_metadata(Uuid::new_v4())?;
+    let pool = Database::connect(opt).await?;
     Ok(pool)
 }
 

@@ -3,8 +3,8 @@ use crate::db::entities::users::Entity as UsersEntity;
 use crate::dtos::shared::RequestDto;
 use crate::dtos::users::requests::CreateUser;
 use crate::dtos::users::responses::User as UserDto;
-use crate::shared::errors::NoType;
-use crate::shared::errors::{IcError, WithMetadata};
+use crate::utils::errors::NoType;
+use crate::utils::errors::IcError;
 use sea_orm::prelude::*;
 use sea_orm::{ConnectionTrait, Set, TransactionTrait};
 
@@ -12,10 +12,7 @@ pub async fn get_all<B>(request: &RequestDto<'_, NoType, B>) -> Result<Vec<UserD
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let users = UsersEntity::find()
-        .all(request.db)
-        .await
-        .with_metadata(request.id)?;
+    let users = UsersEntity::find().all(request.db).await?;
     let users: Vec<UserDto> = users.iter().map(|e| e.try_into().unwrap()).collect();
     Ok(users)
 }
@@ -27,6 +24,6 @@ where
     let mut user = UsersActiveModel::new();
     user.id = Set(Uuid::now_v7());
     user.name = Set(request.data.as_ref().unwrap().name.clone());
-    let user = user.insert(request.db).await.with_metadata(request.id)?;
+    let user = user.insert(request.db).await?;
     Ok(user.into())
 }

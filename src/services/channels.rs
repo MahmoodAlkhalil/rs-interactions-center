@@ -3,7 +3,8 @@ use crate::db::repo::channels as ChannelsRepo;
 use crate::dtos::channels::requests::CreateChannel;
 use crate::dtos::channels::responses::Channel as ChannelDto;
 use crate::dtos::shared::RequestDto;
-use crate::shared::errors::{IcError, NoType, WithMetadata};
+use crate::utils::errors::{IcError, NoType};
+use axum::http::StatusCode;
 
 use sea_orm::{ActiveModelBehavior, ConnectionTrait, Set, TransactionTrait};
 use uuid::Uuid;
@@ -12,9 +13,7 @@ pub async fn get_all<B>(request: &RequestDto<'_, NoType, B>) -> Result<Vec<Chann
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let channels = ChannelsRepo::find_all(request.db)
-        .await
-        .with_metadata(request.id)?;
+    let channels = ChannelsRepo::find_all(request.db).await?;
     let response: Vec<ChannelDto> = channels.iter().map(|c| c.into()).collect();
     Ok(response)
 }
@@ -24,9 +23,11 @@ where
     B: ConnectionTrait + TransactionTrait,
 {
     Ok(ChannelsRepo::find_by_id(request.data.unwrap(), request.db)
-        .await
-        .with_metadata(request.id)?
-        .ok_or(IcError::from((request.id, "Channel not found")))?
+        .await?
+        .ok_or(IcError {
+            status_code: StatusCode::BAD_REQUEST,
+            message: "Channel not found".to_string(),
+        })?
         .into())
 }
 
@@ -37,8 +38,6 @@ where
     let mut channel = ChannelsActiveModel::new();
     channel.id = Set(Uuid::now_v7());
     channel.name = Set(request.data.as_ref().unwrap().name.clone());
-    let channel = ChannelsRepo::insert(channel, request.db)
-        .await
-        .with_metadata(request.id)?;
+    let channel = ChannelsRepo::insert(channel, request.db).await?;
     Ok(channel.into())
 }

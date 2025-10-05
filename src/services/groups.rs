@@ -3,7 +3,8 @@ use crate::db::repo::groups as GroupsRepo;
 use crate::dtos::groups::requests::CreateGroup;
 use crate::dtos::groups::responses::Group as GroupDto;
 use crate::dtos::shared::RequestDto;
-use crate::shared::errors::{IcError, NoType, WithMetadata};
+use crate::utils::errors::{IcError, NoType};
+use axum::http::StatusCode;
 use sea_orm::{ConnectionTrait, Set, TransactionTrait};
 use uuid::Uuid;
 
@@ -20,8 +21,7 @@ where
         },
         request.db,
     )
-    .await
-    .with_metadata(request.id)?;
+    .await?;
     Ok(group.into())
 }
 
@@ -30,8 +30,7 @@ where
     B: ConnectionTrait + TransactionTrait,
 {
     Ok(GroupsRepo::find_all(request.db)
-        .await
-        .with_metadata(request.id)?
+        .await?
         .iter()
         .map(|c| c.into())
         .collect())
@@ -42,10 +41,9 @@ where
     B: ConnectionTrait + TransactionTrait,
 {
     Ok(GroupsRepo::find_by_id(request.data.unwrap(), request.db)
-        .await
-        .with_metadata(request.id)?
+        .await?
         .ok_or(IcError {
-            id: request.id,
+            status_code: StatusCode::BAD_REQUEST,
             message: "Group not found".to_string(),
         })?
         .into())

@@ -1,0 +1,39 @@
+use crate::dtos::shared::ApiResponse;
+use crate::utils::errors::IcError;
+use axum::http::StatusCode;
+use axum::response::{IntoResponse, Response};
+use axum::Json;
+use serde::Serialize;
+use uuid::Uuid;
+
+pub trait ToApiResponse<T> {
+    fn to_api_response(self, id: Uuid) -> ApiResponse<T>;
+}
+
+impl<T> ToApiResponse<T> for Result<T, IcError> {
+    fn to_api_response(self, id: Uuid) -> ApiResponse<T> {
+        match self {
+            Ok(data) => ApiResponse {
+                id,
+                message: "SUCCESS".to_string(),
+                code: StatusCode::OK,
+                data: Some(data),
+            },
+            Err(error) => ApiResponse {
+                id,
+                message: error.message,
+                code: error.status_code,
+                data: None,
+            },
+        }
+    }
+}
+
+impl<T> IntoResponse for ApiResponse<T>
+where
+    T: Serialize,
+{
+    fn into_response(self) -> Response {
+        (self.code, Json(self)).into_response()
+    }
+}

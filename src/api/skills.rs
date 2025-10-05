@@ -2,11 +2,12 @@ use crate::dtos::shared::{ApiResponse, RequestDto};
 use crate::dtos::skills::requests::CreateSkill;
 use crate::dtos::skills::responses::Skill;
 use crate::services;
-use crate::shared::SharedState;
-use crate::shared::errors::IcError;
+use crate::utils::axum::RequestId;
+use crate::utils::common::ToApiResponse;
+use crate::utils::SharedState;
 use axum::extract::State;
 use axum::routing::{get, post};
-use axum::{Json, Router, debug_handler};
+use axum::{debug_handler, Json, Router};
 use std::sync::Arc;
 
 pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
@@ -16,22 +17,22 @@ pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
         .with_state(api_shared_data)
 }
 #[debug_handler]
-async fn get_all(state: State<Arc<SharedState>>) -> Result<Json<ApiResponse<Vec<Skill>>>, IcError> {
+async fn get_all(
+    state: State<Arc<SharedState>>,
+    RequestId(request_id): RequestId,
+) -> ApiResponse<Vec<Skill>> {
     let dto = RequestDto::new(None, &state.db_pool);
-    Ok(Json(ApiResponse::new_success(
-        dto.id,
-        Some(services::skills::get_all(&dto).await?),
-    )))
+    let response = services::skills::get_all(&dto).await;
+    response.to_api_response(request_id)
 }
 
 #[debug_handler]
 async fn create(
     state: State<Arc<SharedState>>,
+    RequestId(request_id): RequestId,
     Json(request): Json<CreateSkill>,
-) -> Result<Json<ApiResponse<Skill>>, IcError> {
+) -> ApiResponse<Skill> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
-    Ok(Json(ApiResponse::new_success(
-        dto.id,
-        Some(services::skills::create(&dto).await?),
-    )))
+    let response = services::skills::create(&dto).await;
+    response.to_api_response(request_id)
 }

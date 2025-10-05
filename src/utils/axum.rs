@@ -53,7 +53,7 @@ where
         request.extensions_mut().insert(RequestId(id));
 
         let span = span!(
-            Level::TRACE,
+            Level::INFO,
             "request",
             %id,
             %method,

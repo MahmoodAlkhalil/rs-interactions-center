@@ -1,5 +1,6 @@
-use log::info;
+use crate::utils::errors::{NoType, StateValidationError};
 use std::fmt::{Display, Formatter};
+use tracing::info;
 
 pub enum InteractionStates {
     New,
@@ -45,7 +46,7 @@ impl TryFrom<i32> for InteractionStates {
 pub fn validate_state_change(
     prev_state: InteractionStates,
     next_state: InteractionStates,
-) -> Result<(), String> {
+) -> Result<NoType, StateValidationError> {
     info!(
         "validating interaction state change from {} to {}",
         prev_state, next_state
@@ -53,21 +54,15 @@ pub fn validate_state_change(
     match prev_state {
         InteractionStates::New => match next_state {
             InteractionStates::New => {
-                return Err(format!(
-                    "Cannot change from {} to {}",
-                    prev_state, next_state
-                ));
+                return Err(StateValidationError::InteractionStateChange);
             }
             InteractionStates::Enqueued => {
-                return Ok(());
+                return Ok(NoType {});
             }
             InteractionStates::Dequeued => {
-                return Err(format!(
-                    "Cannot change from {} to {}",
-                    prev_state, next_state
-                ));
+                return Err(StateValidationError::InteractionStateChange);
             }
-            InteractionStates::Active => return Ok(()),
+            InteractionStates::Active => return Ok(NoType {}),
             InteractionStates::Disconnected => {}
             InteractionStates::Closed => {}
             InteractionStates::Unknown => {}
@@ -78,8 +73,8 @@ pub fn validate_state_change(
         InteractionStates::Disconnected => {}
         InteractionStates::Closed => {}
         InteractionStates::Unknown => {
-            return Err("old state is Unknown, system hiccup..".to_owned());
+            return Err(StateValidationError::InteractionStateChange);
         }
     }
-    Ok(())
+    Ok(NoType {})
 }
