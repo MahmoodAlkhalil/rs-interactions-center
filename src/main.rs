@@ -19,11 +19,13 @@ mod utils;
 #[tokio::main]
 async fn main() -> Result<(), IcError> {
     dotenv::dotenv().ok();
-    tracing_subscriber::fmt()
-        .json()
-        .with_current_span(true)
-        .with_span_list(false)
-        .init();
+    //todo [make logging format an env variable]
+    // tracing_subscriber::fmt()
+    //     .json()
+    //     .with_current_span(true)
+    //     .with_span_list(false)
+    //     .init();
+    tracing_subscriber::fmt().init();
     let db_pool = init_database_pool().await?;
     let nats_client = init_nats_client().await?;
     let shared_state = Arc::new(SharedState {
