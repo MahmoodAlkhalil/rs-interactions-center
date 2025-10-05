@@ -4,16 +4,16 @@ use crate::db::entities::queues_channels_assignment::{
     Entity as QueuesChannelsAssignmentEntity, Model as QueuesChannelsAssignmentModel,
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, DbErr, DeleteResult, EntityTrait,
-    QueryFilter, Set, TransactionTrait,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DbErr, DeleteResult, EntityTrait, QueryFilter,
+    Set, TransactionTrait,
 };
 use uuid::Uuid;
 
-pub async fn find_by_id<B>(id: Uuid, db: &B) -> Result<Option<Model>, DbErr>
+pub async fn find_by_id<B>(id: &Uuid, db: &B) -> Result<Option<Model>, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Entity::find_by_id(id).one(db).await
+    Entity::find_by_id(*id).one(db).await
 }
 
 pub async fn find_all<B>(db: &B) -> Result<Vec<Model>, DbErr>
@@ -38,35 +38,36 @@ where
 }
 
 pub async fn find_queue_with_assigned_channels<B>(
-    id: Uuid,
+    id: &Uuid,
     db: &B,
 ) -> Result<Vec<(Model, Vec<QueuesChannelsAssignmentModel>)>, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    Entity::find_by_id(id)
+    Entity::find_by_id(*id)
         .find_with_related(QueuesChannelsAssignmentEntity)
         .all(db)
         .await
 }
 
 pub async fn delete_queue_to_channels_assignment<B>(
-    data: (Uuid, Vec<Uuid>),
+    data: &(Model, Vec<QueuesChannelsAssignmentModel>),
     db: &B,
 ) -> Result<DeleteResult, DbErr>
 where
     B: ConnectionTrait + TransactionTrait,
 {
+    let channels: Vec<Uuid> = data.1.iter().map(|c| c.channel_id).collect();
     QueuesChannelsAssignmentEntity::delete_many()
-        .filter(QueuesChannelsAssignmentColumn::QueueId.eq(data.0))
-        .filter(QueuesChannelsAssignmentColumn::ChannelId.is_in(data.1))
+        .filter(QueuesChannelsAssignmentColumn::QueueId.eq(data.0.id))
+        .filter(QueuesChannelsAssignmentColumn::ChannelId.is_in(channels))
         .exec(db)
         .await
 }
 
 pub async fn insert_queue_to_channel_assignment<B>(
-    queue_id: Uuid,
-    channels_ids: Vec<Uuid>,
+    queue_id: &Uuid,
+    channels_ids: &Vec<Uuid>,
     db: &B,
 ) -> Result<Vec<(Uuid, Uuid)>, DbErr>
 where

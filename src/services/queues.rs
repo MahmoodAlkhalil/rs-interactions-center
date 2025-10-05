@@ -44,45 +44,36 @@ where
     B: ConnectionTrait + TransactionTrait,
 {
     let tx = request.db.begin().await?;
-    let queue_with_channels =
-        QueuesRepo::find_queue_with_assigned_channels(request.request.as_ref().unwrap().queue_id, &tx)
-            .await
-            .into_iter()
-            .next()
-            .ok_or(IcError {
-                status_code: StatusCode::BAD_REQUEST,
-                message: "Queue not found".to_string(),
-            })?
-            .into_iter()
-            .next()
-            .ok_or(IcError {
-                status_code: StatusCode::BAD_REQUEST,
-                message: "Queue not found".to_string(),
-            })?;
-
+    let queue_with_channels = QueuesRepo::find_queue_with_assigned_channels(
+        &request.request.as_ref().unwrap().queue_id,
+        &tx,
+    )
+    .await
+    .into_iter()
+    .next()
+    .ok_or(IcError {
+        status_code: StatusCode::BAD_REQUEST,
+        message: "Queue not found".to_string(),
+    })?
+    .into_iter()
+    .next()
+    .ok_or(IcError {
+        status_code: StatusCode::BAD_REQUEST,
+        message: "Queue not found".to_string(),
+    })?;
     let channels =
-        ChannelsRepo::find_all_by_ids(request.request.as_ref().unwrap().channels.clone(), &tx).await?;
+        ChannelsRepo::find_all_by_ids(request.request.as_ref().unwrap().channels.clone(), &tx)
+            .await?;
     if channels.len() != request.request.as_ref().unwrap().channels.len() {
         return Err(IcError {
             status_code: StatusCode::BAD_REQUEST,
             message: "One or more channels not found".to_string(),
         });
     }
-    QueuesRepo::delete_queue_to_channels_assignment(
-        (
-            queue_with_channels.0.id,
-            queue_with_channels
-                .1
-                .iter()
-                .map(|item| item.queue_id)
-                .collect(),
-        ),
-        &tx,
-    )
-    .await?;
+    QueuesRepo::delete_queue_to_channels_assignment(&queue_with_channels, &tx).await?;
     QueuesRepo::insert_queue_to_channel_assignment(
-        queue_with_channels.0.id,
-        request.request.as_ref().unwrap().channels.clone(),
+        &queue_with_channels.0.id,
+        &request.request.as_ref().unwrap().channels,
         &tx,
     )
     .await?;
@@ -104,7 +95,7 @@ where
                 status_code: StatusCode::BAD_REQUEST,
                 message: "Interaction not found".to_string(),
             })?;
-    let queue = QueuesRepo::find_by_id(request.request.as_ref().unwrap().queue_id, request.db)
+    let queue = QueuesRepo::find_by_id(&request.request.as_ref().unwrap().queue_id, request.db)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,

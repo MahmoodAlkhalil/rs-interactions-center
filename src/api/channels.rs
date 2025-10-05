@@ -1,4 +1,5 @@
 use crate::dtos::channels::requests::CreateChannel;
+use crate::services::channels as ChannelsService;
 use crate::dtos::channels::responses::Channel as ChannelDto;
 use crate::dtos::shared::{ApiResponse, RequestDto};
 use crate::services;
@@ -24,7 +25,7 @@ async fn get_all(
     RequestId(request_id): RequestId,
 ) -> ApiResponse<Vec<ChannelDto>> {
     let dto = RequestDto::new(None, &state.db_pool);
-    let response = services::channels::get_all(&dto).await;
+    let response = ChannelsService::get_all(&dto).await;
     response.to_api_response()
 }
 
@@ -35,7 +36,7 @@ async fn get_by_id(
     RequestId(request_id): RequestId,
 ) -> ApiResponse<ChannelDto> {
     let dto = RequestDto::new(Some(id), &state.db_pool);
-    let response = services::channels::get_by_id(&dto).await;
+    let response = ChannelsService::get_by_id(&dto).await;
     response.to_api_response()
 }
 
@@ -46,6 +47,6 @@ async fn create(
     Json(request): Json<CreateChannel>,
 ) -> ApiResponse<ChannelDto> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
-    let response = services::channels::create(&dto).await;
+    let response = ChannelsService::create(&dto).await;
     response.to_api_response()
 }
