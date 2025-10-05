@@ -9,6 +9,7 @@ use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use uuid::Uuid;
+use crate::shared::axum::RequestIdLayer;
 
 mod api;
 mod db;
@@ -56,7 +57,8 @@ async fn start_http_server(shared_state: Arc<SharedState>) -> Result<(), IcError
         .merge(api::queues::routes(Arc::clone(&shared_state)))
         .merge(api::channels::routes(Arc::clone(&shared_state)))
         .merge(api::skills::routes(Arc::clone(&shared_state)))
-        .merge(api::interactions::routes(Arc::clone(&shared_state)));
+        .merge(api::interactions::routes(Arc::clone(&shared_state)))
+        .layer(RequestIdLayer);
 
     let router = Router::new().nest("/api/v1", api_v1);
     let listener = match tokio::net::TcpListener::bind("0.0.0.0:8080").await {

@@ -8,6 +8,7 @@ use axum::extract::{Path, State};
 use axum::routing::{get, post};
 use axum::{debug_handler, Json, Router};
 use std::sync::Arc;
+use log::info;
 use uuid::Uuid;
 
 pub fn routes(api_shared_data: Arc<SharedState>) -> Router {

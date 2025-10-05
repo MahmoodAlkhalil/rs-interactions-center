@@ -50,7 +50,7 @@ where
         .await
 }
 
-pub async fn delete_queue_assigned_channels<B>(
+pub async fn delete_queue_to_channels_assignment<B>(
     data: (Uuid, Vec<Uuid>),
     db: &B,
 ) -> Result<DeleteResult, DbErr>

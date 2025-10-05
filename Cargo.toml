@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-axum = { version = "0.8.4", features = ["json", "multipart", "macros"] }
+axum = { version = "0.8.6", features = ["json", "multipart", "macros"] }
+tower = "0.5.2"
+tower-http = { version = "0.6.6" }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.20"
 serde_json = { version = "1.0.145", features = ["default"] }
 sea-orm = { version = "1.1.16", features = ["chrono", "serde_json", "sqlx-postgres", "runtime-tokio", "with-uuid"] }
 tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
@@ -16,3 +20,4 @@ uuid = { version = "1.18.1", features = ["v4", "v7"] }
 serde = { version = "1.0.225", features = ["derive"] }
 chrono = { version = "0.4.42", features = ["serde"] }
 async-nats = "0.43.1"
+futures-util = "0.3.31"

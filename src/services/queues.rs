@@ -63,7 +63,7 @@ where
             "One or more channels not found",
         )));
     }
-    QueuesRepo::delete_queue_assigned_channels(
+    QueuesRepo::delete_queue_to_channels_assignment(
         (
             queue_with_channels.0.id,
             queue_with_channels
