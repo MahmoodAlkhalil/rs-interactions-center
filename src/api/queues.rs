@@ -25,7 +25,7 @@ async fn get_all(
 ) -> ApiResponse<Vec<Queue>> {
     let dto = RequestDto::new(None, &state.db_pool);
     let response = QueuesService::get_all(&dto).await;
-    response.to_api_response(request_id)
+    response.to_api_response()
 }
 
 #[debug_handler]
@@ -36,7 +36,7 @@ async fn create(
 ) -> ApiResponse<Queue> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
     let response = QueuesService::create(&dto).await;
-    response.to_api_response(request_id)
+    response.to_api_response()
 }
 
 #[debug_handler]
@@ -47,5 +47,5 @@ async fn enqueue_interaction(
 ) -> Json<ApiResponse<NoType>> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
     let response = QueuesService::enqueue_interaction(&dto).await;
-    Json(response.to_api_response(request_id))
+    Json(response.to_api_response())
 }

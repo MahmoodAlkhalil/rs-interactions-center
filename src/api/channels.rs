@@ -25,7 +25,7 @@ async fn get_all(
 ) -> ApiResponse<Vec<ChannelDto>> {
     let dto = RequestDto::new(None, &state.db_pool);
     let response = services::channels::get_all(&dto).await;
-    response.to_api_response(request_id)
+    response.to_api_response()
 }
 
 #[debug_handler]
@@ -36,7 +36,7 @@ async fn get_by_id(
 ) -> ApiResponse<ChannelDto> {
     let dto = RequestDto::new(Some(id), &state.db_pool);
     let response = services::channels::get_by_id(&dto).await;
-    response.to_api_response(request_id)
+    response.to_api_response()
 }
 
 #[debug_handler]
@@ -47,5 +47,5 @@ async fn create(
 ) -> ApiResponse<ChannelDto> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
     let response = services::channels::create(&dto).await;
-    response.to_api_response(request_id)
+    response.to_api_response()
 }

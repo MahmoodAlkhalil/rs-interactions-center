@@ -23,7 +23,7 @@ async fn get_all(
 ) -> ApiResponse<Vec<Interaction>> {
     let dto = RequestDto::new(None, &state.db_pool);
     let response = services::interactions::get_all(&dto).await;
-    response.to_api_response(request_id)
+    response.to_api_response()
 }
 
 #[debug_handler]
@@ -34,5 +34,5 @@ async fn create(
 ) -> ApiResponse<Interaction> {
     let dto = RequestDto::new(Some(request), &state.db_pool);
     let response = services::interactions::create(&dto).await;
-    response.to_api_response(request_id)
+    response.to_api_response()
 }

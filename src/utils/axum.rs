@@ -64,6 +64,10 @@ where
         Box::pin(async move {
             let _enter = span.enter();
             let response: Response = future.await?;
+            let mut response = response;
+            response
+                .headers_mut()
+                .insert("X-Request-Id", id.to_string().parse().unwrap());
             Ok(response)
         })
     }
