@@ -3,6 +3,9 @@ name = "rs-interactions-center"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = [".", "migration"]
+
 [dependencies]
 axum = { version = "0.8.6", features = ["json", "multipart", "macros"] }
 tower = "0.5.2"
@@ -17,3 +20,4 @@ serde = { version = "1.0.225", features = ["derive"] }
 chrono = { version = "0.4.42", features = ["serde"] }
 async-nats = "0.43.1"
 futures-util = "0.3.31"
+migration = { path = "migration" }

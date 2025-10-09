@@ -3,13 +3,13 @@ use crate::utils::errors::IcError;
 use crate::utils::SharedState;
 use async_nats::Client;
 use axum::Router;
+use migration::{Migrator, MigratorTrait};
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::info;
 use uuid::Uuid;
-
 mod api;
 mod db;
 mod dtos;
@@ -32,6 +32,7 @@ async fn main() -> Result<(), IcError> {
         db_pool,
         nats_client,
     });
+    Migrator::up(&shared_state.db_pool, None).await?;
     start_http_server(Arc::clone(&shared_state)).await?;
     Ok(())
 }

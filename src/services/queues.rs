@@ -45,7 +45,7 @@ where
 {
     let tx = request.db.begin().await?;
     let queue_with_channels = QueuesRepo::find_queue_with_assigned_channels(
-        &request.request.as_ref().unwrap().queue_id,
+        request.request.as_ref().unwrap().queue_id,
         &tx,
     )
     .await
@@ -72,7 +72,7 @@ where
     }
     QueuesRepo::delete_queue_to_channels_assignment(&queue_with_channels, &tx).await?;
     QueuesRepo::insert_queue_to_channel_assignment(
-        &queue_with_channels.0.id,
+        queue_with_channels.0.id,
         &request.request.as_ref().unwrap().channels,
         &tx,
     )
@@ -95,7 +95,7 @@ where
                 status_code: StatusCode::BAD_REQUEST,
                 message: "Interaction not found".to_string(),
             })?;
-    let queue = QueuesRepo::find_by_id(&request.request.as_ref().unwrap().queue_id, request.db)
+    let queue = QueuesRepo::find_by_id(request.request.as_ref().unwrap().queue_id, request.db)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,
