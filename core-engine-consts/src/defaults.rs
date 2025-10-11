@@ -1,0 +1,1 @@
+pub const DEFAULT_QUEUE_PRIORITY: i32 = 50;

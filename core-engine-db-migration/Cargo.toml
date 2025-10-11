@@ -1,0 +1,17 @@
+[package]
+name = "core-engine-db-migration"
+version = "0.0.1"
+edition = "2024"
+publish = false
+
+[lib]
+name = "CoreEngineDbMigration"
+path = "src/lib.rs"
+
+[dependencies]
+sea-orm-migration = { version = "2.0.0-rc.9", features = ["with-uuid", "runtime-tokio", "sqlx-postgres", "with-chrono"] }
+tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
+tracing = "0.1.41"
+uuid = { version = "1.18.1", features = ["v4", "v7"] }
+core-engine-consts = { path = "../core-engine-consts" }
+strum = "0.27.2"

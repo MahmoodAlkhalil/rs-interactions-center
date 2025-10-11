@@ -3,7 +3,10 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/migration/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core-engine-consts/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core-engine-db-migration/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core-engine/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core-engine/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
