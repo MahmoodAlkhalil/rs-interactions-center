@@ -1,5 +1,5 @@
 use crate::db::entities::channels::Model as ChannelsM;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Serialize, Debug)]

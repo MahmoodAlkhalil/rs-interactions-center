@@ -22,4 +22,3 @@ pub mod users;
 pub mod users_groups_assignment;
 pub mod users_queues_assignment;
 pub mod users_skills_assignment;
-pub mod user_states_tree_mv;

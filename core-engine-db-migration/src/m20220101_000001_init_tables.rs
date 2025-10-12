@@ -24,6 +24,7 @@ impl MigrationTrait for Migration {
                     .col(text_null("description"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .col(boolean("mark_for_delete").default(false))
+                    .col(boolean("online").default(false))
                     .to_owned(),
             )
             .await?;
@@ -80,7 +81,11 @@ impl MigrationTrait for Migration {
                     .to_owned()
                     .if_not_exists()
                     .col(pk_uuid("id"))
-                    .col(text("name"))
+                    .col(text("username"))
+                    .col(text("name").unique_key())
+                    .col(text("nkey_seed").unique_key())
+                    .col(text("nkey_pub").unique_key())
+                    .col(boolean("service_account").default(false))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .col(boolean("mark_for_delete").default(false))
                     .to_owned(),
@@ -461,7 +466,6 @@ impl MigrationTrait for Migration {
             .await?;
         let tx = manager.get_connection().begin().await?;
         tx.execute_unprepared("INSERT INTO channels(id, name) VALUES ('0199d191-78f6-7153-8eb9-b4b926a95996', 'Voice')").await?;
-
         tx.execute_unprepared("INSERT INTO queues(id, name) VALUES ('0199d191-2976-7313-9f51-85c0d31420c9','Voice Sample Queue 1')")
             .await?;
         tx.execute_unprepared(
@@ -471,6 +475,15 @@ impl MigrationTrait for Migration {
             .await?;
         tx.execute_unprepared("INSERT INTO queues_channels_assignment(queue_id, channel_id) VALUES ('0199d1b1-ada5-7179-aff4-e72f75148018','0199d191-78f6-7153-8eb9-b4b926a95996')")
         .await?;
+        tx.execute_unprepared(
+            "INSERT INTO users(id, username, name, nkey_seed, nkey_pub,service_account) VALUES ('0199d920-fe4f-782d-aa86-7df58ebb87f5','core_engine_svc','core engine service account','SUAINSF3V32D5P6TLUQCFCFONRPRM5EDVISYZVTTU75WUHWL4FWBL7YDNE', 'UDMF5NAGRQGFFCZOG6RDLJUTKIOBIPAGK3MCSJVJALXTXLINUVUCPX2N', true)")
+            .await?;
+        tx.execute_unprepared(
+            "INSERT INTO users(id, username,name, nkey_seed, nkey_pub) VALUES ('0199d2ad-4cb9-7298-9b7a-adc9178518a8', 'agent1', 'Sample Agent 1','SUAHMSVN6476ELYZUOSKWK3LSTJ72MCXGDZZVQQXKOO7574F4OMPVEY53E', 'UA6ANCGHBXK2N4QOVYUGULXQXFTOPF2YALZTHTFFTF75APFRRS7VQE5P')")
+            .await?;
+        tx.execute_unprepared(
+            "INSERT INTO users(id, username, name, nkey_seed, nkey_pub) VALUES ('0199d2ad-8910-7a98-9ba2-b2e322ace221', 'agent2', 'Sample Agent 2', 'SUAFI5WBZRLICZAMTGGEJRBKDMDPPYMWMO3X4M7FMYYCF6UYVXH32B5M3A' ,'UCE2MASNKCKCVFTRPPGZR5AOWQJ6J45MLH7QKNYWKAXR6NYDG35IMBDD')")
+            .await?;
         for state in UserStates::VARIANTS.iter().copied() {
             let state_id: i32 = state.into();
             let state_name = state.to_string();
@@ -493,7 +506,8 @@ impl MigrationTrait for Migration {
                 }
             }
         }
-        tx.execute_unprepared(CREATE_USER_STATES_MATERIALIZED_VIEW).await?;
+        tx.execute_unprepared(CREATE_USER_STATES_MATERIALIZED_VIEW)
+            .await?;
 
         for state in InteractionStates::VARIANTS.iter().copied() {
             let state_id: i32 = state.into();
@@ -510,6 +524,10 @@ impl MigrationTrait for Migration {
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .get_connection()
+            .execute_unprepared("DROP MATERIALIZED VIEW user_states_tree_mv;")
+            .await?;
         manager
             .drop_table(
                 Table::drop()
@@ -635,10 +653,8 @@ impl MigrationTrait for Migration {
     }
 }
 const CREATE_USER_STATES_MATERIALIZED_VIEW: &str = r#"
--- Create the materialized view
 CREATE MATERIALIZED VIEW user_states_tree_mv AS
 WITH RECURSIVE state_tree AS (
-    -- Base case: root nodes (parent_id is NULL)
     SELECT
         us.id,
         us.name,
@@ -659,7 +675,6 @@ WITH RECURSIVE state_tree AS (
 
     UNION ALL
 
-    -- Recursive case: child nodes
     SELECT
         us.id,
         us.name,
@@ -695,8 +710,6 @@ FROM
     state_tree st
 ORDER BY
     st.path;
-
--- Create indexes for better performance
 CREATE INDEX idx_user_states_tree_mv_id ON user_states_tree_mv (id);
 CREATE INDEX idx_user_states_tree_mv_parent_id ON user_states_tree_mv (parent_id);
 CREATE INDEX idx_user_states_tree_mv_path ON user_states_tree_mv USING gin (path);

@@ -8,7 +8,14 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     #[sea_orm(column_type = "Text")]
+    pub username: String,
+    #[sea_orm(column_type = "Text", unique)]
     pub name: String,
+    #[sea_orm(column_type = "Text", unique)]
+    pub nkey_seed: String,
+    #[sea_orm(column_type = "Text", unique)]
+    pub nkey_pub: String,
+    pub service_account: bool,
     pub created_at: DateTimeWithTimeZone,
     pub mark_for_delete: bool,
 }

@@ -13,6 +13,7 @@ pub struct Model {
     pub description: Option<String>,
     pub created_at: DateTimeWithTimeZone,
     pub mark_for_delete: bool,
+    pub online: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

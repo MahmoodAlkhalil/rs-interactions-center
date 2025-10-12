@@ -1,5 +1,5 @@
 use crate::db::entities::user_states::Model as UserStatesM;
-use crate::db::entities::user_states_tree_mv::Model as UserStatesTreeM;
+use crate::db::external_entities::user_states_tree_mv::Model as UserStatesTreeM;
 use crate::db::entities::users::Model as UsersM;
 use serde::Serialize;
 use uuid::Uuid;

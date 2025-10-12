@@ -8,6 +8,7 @@ axum = { version = "0.8.6", features = ["json", "multipart", "macros"] }
 tower = "0.5.2"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["json"] }
+serde_json = "1.0.145"
 sea-orm = { version = "2.0.0-rc.9", features = ["chrono", "serde_json", "sqlx-postgres", "runtime-tokio", "with-uuid"] }
 sea-orm-migration = { version = "2.0.0-rc.9", features = ["with-uuid", "runtime-tokio", "sqlx-postgres", "with-chrono"] }
 tokio = { version = "1.47.1", features = ["rt-multi-thread"] }
@@ -15,8 +16,9 @@ dotenv = "0.15.0"
 uuid = { version = "1.18.1", features = ["v4", "v7"] }
 serde = { version = "1.0.225", features = ["derive"] }
 chrono = { version = "0.4.42", features = ["serde"] }
-async-nats = "0.44.2"
 futures-util = "0.3.31"
 num_enum = "0.7.4"
 core-engine-db-migration = { path = "../core-engine-db-migration" }
 core-engine-consts = { path = "../core-engine-consts" }
+async-nats = { version = "0.44.2", features = ["default"] }
+hcl-rs={version="0.19.4"}

@@ -2,12 +2,13 @@ use crate::dtos::shared::ToApiResponse;
 use crate::dtos::shared::{ApiResponse, RequestDto};
 use crate::dtos::users::requests::CreateUser;
 use crate::dtos::users::responses::{User as UserDto, UserState};
+use crate::services::nats as NatsService;
 use crate::services::users as UsersService;
-use crate::utils::axum::RequestId;
 use crate::utils::SharedState;
+use crate::utils::axum::RequestId;
 use axum::extract::State;
 use axum::routing::{get, post};
-use axum::{debug_handler, Json, Router};
+use axum::{Json, Router, debug_handler};
 use std::sync::Arc;
 
 pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
