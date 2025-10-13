@@ -1,0 +1,7 @@
+authorization = {
+  "users" = [
+    {
+      "nkey" = "core_engine_pub_key"
+    },
+  ]
+}
