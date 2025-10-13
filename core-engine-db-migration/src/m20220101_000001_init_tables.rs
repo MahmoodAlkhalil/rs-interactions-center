@@ -28,7 +28,7 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
-
+        
         manager
             .create_table(
                 Table::create()

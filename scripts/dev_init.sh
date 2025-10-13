@@ -1,9 +1,16 @@
 #!/bin/bash
+PG_PORT=22455
+NATS_PORT=22456
+NATS_WS_PORT=22457
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --pgpass)
-            PGPASS="$2"
+        --pg-pass)
+            PG_PASS="$2"
+            shift 2
+            ;;
+        --pg-data-dir)
+            PG_DATA_DIR="$2"
             shift 2
             ;;
         *)
@@ -13,11 +20,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-if [[ -z "$PGPASS" ]]; then
-    echo "Error: --pgpass option is required"
+if [[ -z "$PG_PASS" ]]; then
+    echo "Error: --PG_PASS option is required"
     exit 1
 fi
-echo "Password received: $PGPASS"
+echo "Password received: $PG_PASS"
 
 SCRIPT_PATH="$(realpath "$BASH_SOURCE")"
 SCRIPT_DIR="$(dirname "$(realpath "$BASH_SOURCE")")"
@@ -58,7 +65,14 @@ fi
 
 podman stop rs-interactions-center-postgres > /dev/null 2>&1
 podman container rm rs-interactions-center-postgres > /dev/null 2>&1
-podman run -d --replace --name rs-interactions-center-postgres -p 5432:5432 -e POSTGRES_PASSWORD="$PGPASS" postgres:$POSTGRES_VERSION 2>/dev/null
+if [[ -z "$PG_DATA_DIR" ]]; then
+    echo "PG_DATA_DIR is empty or not set"
+    podman run -d --replace --name rs-interactions-center-postgres -p $PG_PORT:5432 -e POSTGRES_PASSWORD="$PG_PASS" postgres:$POSTGRES_VERSION 2>/dev/null
+else
+    echo "PG_DATA_DIR is set to: $PG_DATA_DIR"
+    podman run -d --replace --name rs-interactions-center-postgres -p $PG_PORT:5432 -e POSTGRES_PASSWORD="$PG_PASS" --volume $PG_DATA_DIR:/var/lib/postgresql postgres:$POSTGRES_VERSION 2>/dev/null
+fi
+
 
 NKEYS=$("${GO_APPS_PATH}/bin/nk" -gen user -pubout)
 CORE_ENGINE_SEED=$(echo "$NKEYS" | head -n1)
@@ -70,7 +84,7 @@ sed -i "s/\"core_engine_pub_key\"/\"$CORE_ENGINE_PUB\"/g" $SCRIPT_DIR/helper-fil
 
 podman stop rs-interactions-center-nats > /dev/null 2>&1
 podman container rm rs-interactions-center-nats > /dev/null 2>&1
-podman run -d --replace --name rs-interactions-center-nats -p 4222:4222 -p 4223:4223 -v $SCRIPT_DIR/helper-files/nats/dev-generated:/etc/nats/conf nats:$NATS_VERSION -c /etc/nats/conf/nats.conf
+podman run -d --replace --name rs-interactions-center-nats -p $NATS_PORT:4222 -p $NATS_WS_PORT:4223 -v $SCRIPT_DIR/helper-files/nats/dev-generated:/etc/nats/conf nats:$NATS_VERSION -c /etc/nats/conf/nats.conf
 
 echo "Waiting for Postgres container to be ready and accepts connections"
 until podman exec rs-interactions-center-postgres pg_isready -U postgres | grep -q "accepting connections"; do
@@ -78,10 +92,36 @@ until podman exec rs-interactions-center-postgres pg_isready -U postgres | grep 
     sleep 2
 done
 
-echo "Creating rsic user"
-podman exec rs-interactions-center-postgres psql -U postgres -c "CREATE USER rsic WITH PASSWORD '$PGPASS';"
-echo "Creating core database"
-podman exec rs-interactions-center-postgres psql -U postgres -c "CREATE DATABASE core OWNER rsic;"
-echo "allowing rsic user remote login"
-podman exec rs-interactions-center-postgres psql -U postgres -c "ALTER USER rsic WITH LOGIN;"
 
+CREATE_USER_QUERY="CREATE USER rsic WITH PASSWORD '$PG_PASS';"
+UPDATE_USER_PASSWORD_QUERY="ALTER USER rsic WITH PASSWORD '$PG_PASS';"
+ALLOW_USER_LOGIN_QUERY="ALTER USER rsic WITH LOGIN;"
+CREATE_DATABASE_QUERY="CREATE DATABASE core OWNER rsic;"
+
+echo "$CREATE_USER_QUERY"
+podman exec rs-interactions-center-postgres psql -U postgres -c "$CREATE_USER_QUERY"
+echo "$ALLOW_USER_LOGIN_QUERY"
+podman exec rs-interactions-center-postgres psql -U postgres -c "$ALLOW_USER_LOGIN_QUERY"
+echo "$UPDATE_USER_PASSWORD_QUERY"
+podman exec rs-interactions-center-postgres psql -U postgres -c "$UPDATE_USER_PASSWORD_QUERY"
+echo "$CREATE_DATABASE_QUERY"
+podman exec rs-interactions-center-postgres psql -U postgres -c "$CREATE_DATABASE_QUERY"
+
+echo "#auto generated env file data" >> $SCRIPT_DIR/../.env
+sed -i '/^RUST_LOG/d' $SCRIPT_DIR/../.env
+echo "RUST_LOG=info" >> $SCRIPT_DIR/../.env
+
+sed -i '/^DATABASE_URL/d' $SCRIPT_DIR/../.env
+echo "DATABASE_URL=postgres://rsic:$PG_PASS@localhost:$PG_PORT/core" >> $SCRIPT_DIR/../.env
+
+sed -i '/^NATS_URL/d' $SCRIPT_DIR/../.env
+echo "NATS_URL=nats://localhost:$NATS_PORT" >> $SCRIPT_DIR/../.env
+
+sed -i '/^NATS_SEED/d' $SCRIPT_DIR/../.env
+echo "NATS_SEED=$CORE_ENGINE_SEED" >> $SCRIPT_DIR/../.env
+
+sed -i '/^NATS_USERS_CONFIG_PATH/d' $SCRIPT_DIR/../.env
+echo "NATS_USERS_CONFIG_PATH=$SCRIPT_DIR/helper-files/nats/dev-generated/users.conf" >> $SCRIPT_DIR/../.env
+
+sed -i '/^NATS_NK_BIN_PATH/d' $SCRIPT_DIR/../.env
+echo "NATS_NK_BIN_PATH=$GO_APPS_PATH/bin/nk" >> $SCRIPT_DIR/../.env
