@@ -2,4 +2,4 @@
 /.idea
 .env
 .env.*
-/scripts/helper-files/nats/dev-generated
+/scripts/helper-files/nats/dev-generated/*

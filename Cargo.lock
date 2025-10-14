@@ -512,7 +512,9 @@ dependencies = [
  "axum",
  "chrono",
  "core-engine-consts",
+ "core-engine-db",
  "core-engine-db-migration",
+ "core-engine-dto",
  "dotenv",
  "futures-util",
  "hcl-rs",
@@ -542,6 +544,9 @@ name = "core-engine-db"
 version = "0.0.1"
 dependencies = [
  "sea-orm",
+ "sea-orm-migration",
+ "tracing",
+ "uuid",
 ]
 
 [[package]]
@@ -553,6 +558,18 @@ dependencies = [
  "strum",
  "tokio",
  "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "core-engine-dto"
+version = "0.0.1"
+dependencies = [
+ "axum",
+ "chrono",
+ "core-engine-db",
+ "sea-orm",
+ "serde",
  "uuid",
 ]
 
@@ -2268,9 +2285,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm"
-version = "2.0.0-rc.9"
+version = "2.0.0-rc.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5f6630c76b8485b923b13dfce133ce6f8158d9a1dcbc8443b6f5de4952962e5"
+checksum = "d10d776a4086bc1dea156d52f4d52f61617b5d074b4c026304b9d7aef7d0117a"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -2298,9 +2315,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-cli"
-version = "2.0.0-rc.9"
+version = "2.0.0-rc.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5b530382bd0183fc89e132d3173fa6c49693a4804287e1ca1be45fdfe598522a"
+checksum = "bd68cd7fffcfd5262a2d5ae8f425305c0fccaf1354b9dd9159a4d316efff6ca7"
 dependencies = [
  "chrono",
  "clap",
@@ -2317,9 +2334,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-macros"
-version = "2.0.0-rc.9"
+version = "2.0.0-rc.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bbde8c00319d452714377c1842b4ee3ec7d2eb2b3bd022f7515f6637598c135"
+checksum = "bd736f392dbe4b5bdbae5b57068c3c206fd3d50c2437c14303e1e2d626def5a8"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -2331,9 +2348,9 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-migration"
-version = "2.0.0-rc.9"
+version = "2.0.0-rc.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66a64bbe9d65d3a22d8f6019b9519bed1a9fcb522d062b2a442f6537996b3fff"
+checksum = "f963e814a7a2605f1dc30372301d06150d9b447ca19f2365662121fbd612056d"
 dependencies = [
  "async-trait",
  "clap",

@@ -1,0 +1,12 @@
+[package]
+name = "core-engine-dto"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+core-engine-db = { workspace = true }
+serde = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+sea-orm = { workspace = true }
+axum = { workspace = true }
