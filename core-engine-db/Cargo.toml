@@ -1,0 +1,7 @@
+[package]
+name = "core-engine-db"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+sea-orm = { version = "2.0.0-rc.9", features = ["chrono", "serde_json", "sqlx-postgres", "runtime-tokio", "with-uuid"] }

@@ -538,6 +538,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "core-engine-db"
+version = "0.0.1"
+dependencies = [
+ "sea-orm",
+]
+
+[[package]]
 name = "core-engine-db-migration"
 version = "0.0.1"
 dependencies = [

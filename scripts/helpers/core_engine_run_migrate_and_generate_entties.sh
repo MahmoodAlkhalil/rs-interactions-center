@@ -6,4 +6,4 @@ echo "Script directory: $SCRIPT_DIR"
 
 sea-orm-cli migrate -d ./core-engine-db-migration/ down
 sea-orm-cli migrate -d ./core-engine-db-migration/ up
-sea-orm-cli generate entity -o ./core-engine/src/db/entities/
+sea-orm-cli generate entity -o ./core-engine-db/src/entities/
