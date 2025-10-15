@@ -1,14 +1,10 @@
-use crate::dtos::channels::requests::CreateChannel;
 use crate::services::channels as ChannelsService;
-use crate::dtos::channels::responses::Channel as ChannelDto;
-use crate::dtos::shared::{ApiResponse, RequestDto};
-use crate::services;
-use crate::utils::axum::RequestId;
-use crate::dtos::shared::ToApiResponse;
 use crate::utils::SharedState;
+use crate::utils::axum::RequestId;
 use axum::extract::{Path, State};
 use axum::routing::{get, post};
-use axum::{debug_handler, Json, Router};
+use axum::{Json, Router, debug_handler};
+use core_engine_dto::{conversion::IntoApiResponse, ApiResponse, Channel, Request};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -23,10 +19,9 @@ pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
 async fn get_all(
     state: State<Arc<SharedState>>,
     RequestId(request_id): RequestId,
-) -> ApiResponse<Vec<ChannelDto>> {
-    let dto = RequestDto::new(None, &state.db_pool);
-    let response = ChannelsService::get_all(&dto).await;
-    response.to_api_response()
+) -> ApiResponse<Vec<Channel>> {
+    let dto = Request::new(None, &state.db_pool);
+    ChannelsService::get_all(dto).await.into_api_response()
 }
 
 #[debug_handler]
@@ -34,19 +29,17 @@ async fn get_by_id(
     state: State<Arc<SharedState>>,
     Path(id): Path<Uuid>,
     RequestId(request_id): RequestId,
-) -> ApiResponse<ChannelDto> {
-    let dto = RequestDto::new(Some(id), &state.db_pool);
-    let response = ChannelsService::get_by_id(&dto).await;
-    response.to_api_response()
+) -> ApiResponse<Channel> {
+    let dto = Request::new(Some(id), &state.db_pool);
+    ChannelsService::get_by_id(dto).await.into_api_response()
 }
 
 #[debug_handler]
 async fn create(
     state: State<Arc<SharedState>>,
     RequestId(request_id): RequestId,
-    Json(request): Json<CreateChannel>,
-) -> ApiResponse<ChannelDto> {
-    let dto = RequestDto::new(Some(request), &state.db_pool);
-    let response = ChannelsService::create(&dto).await;
-    response.to_api_response()
+    Json(request): Json<Channel>,
+) -> ApiResponse<Channel> {
+    let dto = Request::new(Some(request), &state.db_pool);
+    ChannelsService::create(dto).await.into_api_response()
 }

@@ -513,7 +513,6 @@ dependencies = [
  "chrono",
  "core-engine-consts",
  "core-engine-db",
- "core-engine-db-migration",
  "core-engine-dto",
  "dotenv",
  "futures-util",
@@ -543,8 +542,11 @@ dependencies = [
 name = "core-engine-db"
 version = "0.0.1"
 dependencies = [
+ "core-engine-consts",
  "sea-orm",
  "sea-orm-migration",
+ "strum",
+ "tokio",
  "tracing",
  "uuid",
 ]
@@ -554,8 +556,12 @@ name = "core-engine-db-migration"
 version = "0.0.1"
 dependencies = [
  "core-engine-consts",
+ "num_enum",
+ "sea-orm",
  "sea-orm-migration",
+ "serde",
  "strum",
+ "strum_macros",
  "tokio",
  "tracing",
  "uuid",
@@ -565,11 +571,16 @@ dependencies = [
 name = "core-engine-dto"
 version = "0.0.1"
 dependencies = [
+ "async-nats",
  "axum",
  "chrono",
+ "core-engine-consts",
  "core-engine-db",
+ "num_enum",
  "sea-orm",
  "serde",
+ "strum",
+ "tracing",
  "uuid",
 ]
 

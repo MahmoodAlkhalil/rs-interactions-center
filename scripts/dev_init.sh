@@ -21,7 +21,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$PG_PASS" ]]; then
-    echo "Error: --PG_PASS option is required"
+    echo "Error: --pg-pass option is required"
     exit 1
 fi
 echo "Password received: $PG_PASS"
@@ -78,6 +78,7 @@ NKEYS=$("${GO_APPS_PATH}/bin/nk" -gen user -pubout)
 CORE_ENGINE_SEED=$(echo "$NKEYS" | head -n1)
 CORE_ENGINE_PUB=$(echo "$NKEYS" | tail -n1)
 
+mkdir $SCRIPT_DIR/helper-files/nats/dev-generated
 cp -f $SCRIPT_DIR/helper-files/nats/skeletons/nats.conf.skel $SCRIPT_DIR/helper-files/nats/dev-generated/nats.conf
 cp -f $SCRIPT_DIR/helper-files/nats/skeletons/users.conf.skel $SCRIPT_DIR/helper-files/nats/dev-generated/users.conf
 sed -i "s/\"core_engine_pub_key\"/\"$CORE_ENGINE_PUB\"/g" $SCRIPT_DIR/helper-files/nats/dev-generated/users.conf
@@ -125,3 +126,6 @@ echo "NATS_USERS_CONFIG_PATH=$SCRIPT_DIR/helper-files/nats/dev-generated/users.c
 
 sed -i '/^NATS_NK_BIN_PATH/d' $SCRIPT_DIR/../.env
 echo "NATS_NK_BIN_PATH=$GO_APPS_PATH/bin/nk" >> $SCRIPT_DIR/../.env
+
+
+bash $SCRIPT_DIR/helper-scripts/core_db_init.sh

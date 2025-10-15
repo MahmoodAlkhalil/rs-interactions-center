@@ -1,22 +1,12 @@
-use async_nats::service::error;
 use axum::http::StatusCode;
-use hcl::Body;
-use std::env;
-use std::fs;
-use std::io::Read;
+use core_engine_dto::{
+    errors::IcError,
+    nats::{KeyPair, NatsUsersConfig, Permissions, User},
+};
 use std::process::Command;
 use std::vec;
+use std::{env, fs};
 use tracing::error;
-use tracing::info;
-use tracing_subscriber::registry::Data;
-use uuid::Uuid;
-
-use crate::api::users;
-use crate::dtos::nats::CreateNatsUser;
-use crate::dtos::nats::NatsUsersConfig;
-use crate::dtos::nats::Permissions;
-use crate::dtos::nats::User;
-use crate::{dtos::nats::KeyPair, utils::errors::IcError};
 
 pub fn generate_nkeys() -> Result<KeyPair, IcError> {
     let output = Command::new(env::var("NATS_NK_BIN_PATH").unwrap())
@@ -52,7 +42,7 @@ pub fn generate_nkeys() -> Result<KeyPair, IcError> {
     Ok(key_pair)
 }
 
-pub fn append_to_users_conf(request: CreateNatsUser) -> Result<(), IcError> {
+pub fn append_to_users_conf(user_id: &str, pub_key: &str) -> Result<(), IcError> {
     let users_config_file_path = env::var("NATS_USERS_CONFIG_PATH");
     let users_config_file_path = match users_config_file_path {
         Ok(data) => data,
@@ -95,10 +85,10 @@ pub fn append_to_users_conf(request: CreateNatsUser) -> Result<(), IcError> {
         }
     };
     users_config.authorization.users.push(User {
-        nkey: request.pub_key.to_string(),
+        nkey: format!("{}", pub_key),
         permissions: Some(Permissions {
-            sub: Some(vec![format!("agent.{}", request.user_id)]),
-            r#pub: Some(vec![format!("agent.{}", request.user_id)]),
+            sub: Some(vec![format!("agent.{}", user_id)]),
+            r#pub: Some(vec![format!("agent.{}", user_id)]),
         }),
     });
     let users_config = hcl::to_string(&users_config);

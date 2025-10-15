@@ -1,23 +1,21 @@
-use crate::db::entities::channels::{ActiveModel as ChannelsAM, Entity as ChannelsE};
-use crate::dtos::channels::requests::CreateChannel;
-use crate::dtos::channels::responses::Channel as ChannelDto;
-use crate::dtos::shared::RequestDto;
-use crate::utils::errors::{IcError, NoType};
 use axum::http::StatusCode;
+use core_engine_db::entities::channels::{ActiveModel as ChannelsAM, Entity as ChannelsE};
+use core_engine_dto::{Channel, Request, errors::IcError};
 
 use sea_orm::{ActiveModelBehavior, ConnectionTrait, EntityTrait, Set, TransactionTrait};
+use tower::util::error::optional::None;
 use uuid::Uuid;
 
-pub async fn get_all<B>(request: &RequestDto<'_, NoType, B>) -> Result<Vec<ChannelDto>, IcError>
+pub async fn get_all<B>(request: Request<'_, None, B>) -> Result<Vec<Channel>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
     let channels = ChannelsE::find().all(request.db).await?;
-    let response: Vec<ChannelDto> = channels.iter().map(|c| c.into()).collect();
+    let response: Vec<Channel> = channels.into_iter().map(|c| c.into()).collect();
     Ok(response)
 }
 
-pub async fn get_by_id<B>(request: &RequestDto<'_, Uuid, B>) -> Result<ChannelDto, IcError>
+pub async fn get_by_id<B>(request: Request<'_, Uuid, B>) -> Result<Channel, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
@@ -31,17 +29,15 @@ where
     Ok(channel.into())
 }
 
-pub async fn create<B>(request: &RequestDto<'_, CreateChannel, B>) -> Result<ChannelDto, IcError>
+pub async fn create<B>(request: Request<'_, Channel, B>) -> Result<Channel, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
+    let Request { db, data } = request;
+    let data = data.unwrap();
     let mut channel = ChannelsAM::new();
     channel.id = Set(Uuid::now_v7());
-    channel.name = Set(request.data.as_ref().unwrap().name.clone());
-    let channel = ChannelsE::insert(channel)
-        .exec_with_returning(request.db)
-        .await?;
+    channel.name = Set(data.name.unwrap());
+    let channel = ChannelsE::insert(channel).exec_with_returning(db).await?;
     Ok(channel.into())
 }
-
-

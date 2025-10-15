@@ -1,5 +1,5 @@
-use crate::utils::errors::StateValidationError;
 use core_engine_consts::interaction_states::InteractionStates;
+use core_engine_dto::errors::StateValidationError;
 
 pub fn validate_interaction_state_change(
     old_state: InteractionStates,

@@ -4,16 +4,18 @@ members = [
     "core-engine",
     "core-engine-consts",
     "core-engine-db",
-    "core-engine-db-migration",
+    "core-engine-db/migration",
     "core-engine-dto",
 ]
+default-members = ["core-engine"]
+
 
 [workspace.dependencies]
 core-engine = { path = "./core-engine" }
 core-engine-consts = { path = "./core-engine-consts" }
 core-engine-db = { path = "./core-engine-db" }
-core-engine-db-migration = { path = "./core-engine-db-migration" }
 core-engine-dto = { path = "./core-engine-dto" }
+core-engine-db-migration = { path = "./core-engine-db/migration" }
 
 sea-orm = { version = "2.0.0-rc.10", features = [
     "chrono",

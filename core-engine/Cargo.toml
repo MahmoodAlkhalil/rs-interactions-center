@@ -4,14 +4,11 @@ version = "0.0.1"
 edition = "2024"
 
 [dependencies]
-core-engine-db-migration = { workspace = true }
 core-engine-consts = { workspace = true }
 core-engine-db = { workspace = true }
 core-engine-dto = { workspace = true }
-
 sea-orm = { workspace = true }
 sea-orm-migration = { workspace = true }
-
 axum = { workspace = true }
 tower = { workspace = true }
 tracing = { workspace = true }

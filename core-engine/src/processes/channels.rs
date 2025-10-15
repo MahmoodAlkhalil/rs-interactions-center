@@ -1,4 +1,4 @@
-use crate::db::entities::channels::Entity as ChannelsE;
+use core_engine_db::entities::channels::Entity as ChannelsE;
 use crate::dtos::channels::shared::{ChannelHealth, ChannelHealthNotificationPayload};
 use crate::utils::errors::IcError;
 use crate::utils::SharedState;

@@ -1,16 +1,16 @@
-use core::error;
 use std::string::FromUtf8Error;
 
 use async_nats::ConnectError;
 use axum::http::StatusCode;
 use core_engine_consts::interaction_states::InteractionStates;
 use num_enum::TryFromPrimitiveError;
-use sea_orm::{DbErr, SqlxError};
+use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
 use tracing::error;
 
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct IcError {
+    #[serde(skip_serializing)]
     pub status_code: StatusCode,
     pub message: String,
 }
@@ -30,25 +30,16 @@ impl From<StateValidationError> for IcError {
         };
         match value {
             StateValidationError::InteractionStateChange => {
-                error.message = "interaction new state is not valid".to_string()
+                error.message = "Interaction new state is not valid".to_string()
             }
             StateValidationError::UserStateChange => {
-                error.message = "user new state is not valid".to_string()
+                error.message = "User new state is not valid".to_string()
             }
             StateValidationError::QueueStateChange => {
-                error.message = "queue new state is not valid".to_string()
+                error.message = "Queue new state is not valid".to_string()
             }
         }
         error
-    }
-}
-
-impl From<SqlxError> for IcError {
-    fn from(value: SqlxError) -> Self {
-        IcError {
-            status_code: StatusCode::INTERNAL_SERVER_ERROR,
-            message: "database driver error".to_string(),
-        }
     }
 }
 
@@ -62,20 +53,21 @@ impl From<DbErr> for IcError {
     }
 }
 
-impl From<TryFromPrimitiveError<InteractionStates>> for IcError {
-    fn from(_: TryFromPrimitiveError<InteractionStates>) -> Self {
+impl From<ConnectError> for IcError {
+    fn from(value: ConnectError) -> Self {
         IcError {
-            status_code: StatusCode::BAD_REQUEST,
-            message: "Invalid interaction state value".to_string(),
+            status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            message: "NATS client connection error".to_owned(),
         }
     }
 }
 
-impl From<ConnectError> for IcError {
-    fn from(value: ConnectError) -> Self {
+impl From<TryFromPrimitiveError<InteractionStates>> for IcError {
+    fn from(error: TryFromPrimitiveError<InteractionStates>) -> Self {
+        error!("InteractionStates enum conversion error {}", error);
         IcError {
-            status_code: Default::default(),
-            message: "".to_string(),
+            status_code: StatusCode::INTERNAL_SERVER_ERROR,
+            message: "server error, interaction state conversion failure, check logs".to_string(),
         }
     }
 }
@@ -99,6 +91,5 @@ impl From<FromUtf8Error> for IcError {
         }
     }
 }
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NoType {}

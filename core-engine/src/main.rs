@@ -1,18 +1,14 @@
 use crate::utils::SharedState;
 use crate::utils::axum::RequestIdLayer;
-use crate::utils::errors::IcError;
-use CoreEngineDbMigration::Migrator;
 use async_nats::Client;
 use axum::Router;
+use core_engine_dto::errors::IcError;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-use sea_orm_migration::MigratorTrait;
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use tracing::Level;
 mod api;
-mod db;
-mod dtos;
 mod services;
 mod utils;
 
@@ -20,28 +16,29 @@ mod utils;
 async fn main() -> Result<(), IcError> {
     dotenv::dotenv().ok();
     //todo [make logging format an env variable]
-    // tracing_subscriber::fmt()
-    //     .json()
-    //     .with_current_span(true)
-    //     .with_span_list(false)
-    //     .init();
-    tracing_subscriber::fmt().with_max_level(Level::INFO).init();
+    tracing_subscriber::fmt()
+        .json()
+        .with_current_span(true)
+        .with_span_list(false)
+        .init();
+    // tracing_subscriber::fmt().with_max_level(Level::INFO).init();
     let db_pool = init_database_pool().await?;
     let nats_client = init_nats_client().await?;
     let shared_state = Arc::new(SharedState::new(db_pool, nats_client));
-    Migrator::up(&shared_state.db_pool, None).await?;
     start_http_server(Arc::clone(&shared_state)).await?;
     Ok(())
 }
 
 async fn init_database_pool() -> Result<DatabaseConnection, IcError> {
     let mut opt = ConnectOptions::new(env::var("DATABASE_URL").unwrap().to_owned());
-    opt.max_connections(100)
+    opt.max_connections(50)
         .min_connections(5)
-        .connect_timeout(Duration::from_secs(8))
+        .connect_lazy(false)
+        .connect_timeout(Duration::from_secs(30))
+        .acquire_timeout(Duration::from_secs(30))
         .idle_timeout(Duration::from_secs(8))
         .max_lifetime(Duration::from_secs(8))
-        .sqlx_logging(true);
+        .sqlx_logging(false);
     let pool = Database::connect(opt).await?;
     Ok(pool)
 }

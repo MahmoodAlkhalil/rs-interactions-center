@@ -1,36 +1,33 @@
-use crate::db::entities::groups::{ActiveModel as GroupsAM, Entity as GroupsE};
-use crate::dtos::groups::requests::CreateGroup;
-use crate::dtos::groups::responses::Group as GroupDto;
-use crate::dtos::shared::RequestDto;
-use crate::utils::errors::{IcError, NoType};
 use axum::http::StatusCode;
+use core_engine_db::entities::groups::{ActiveModel as GroupsAM, Entity as GroupsE};
+use core_engine_dto::{Group, Request, errors::IcError};
 use sea_orm::{ConnectionTrait, EntityTrait, Set, TransactionTrait};
 use uuid::Uuid;
 
-pub async fn create<B>(request: &RequestDto<'_, CreateGroup, B>) -> Result<GroupDto, IcError>
+pub async fn create<B>(request: Request<'_, Group, B>) -> Result<Group, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
+    let Request { db, data } = request;
+    let data = data.unwrap();
     let group = GroupsAM {
         id: Set(Uuid::now_v7()),
-        name: Set(request.data.as_ref().unwrap().name.clone()),
+        name: Set(data.name.unwrap()),
         ..Default::default()
     };
-    let group = GroupsE::insert(group)
-        .exec_with_returning(request.db)
-        .await?;
+    let group = GroupsE::insert(group).exec_with_returning(db).await?;
     Ok(group.into())
 }
 
-pub async fn get_all<B>(request: &RequestDto<'_, NoType, B>) -> Result<Vec<GroupDto>, IcError>
+pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<Group>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
     let groups = GroupsE::find().all(request.db).await?;
-    Ok(groups.iter().map(|c| c.into()).collect())
+    Ok(groups.into_iter().map(|c| c.into()).collect())
 }
 
-pub async fn get_by_id<B>(request: &RequestDto<'_, Uuid, B>) -> Result<GroupDto, IcError>
+pub async fn get_by_id<B>(request: Request<'_, Uuid, B>) -> Result<Group, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {

@@ -1,8 +1,8 @@
-use crate::sea_orm::DatabaseBackend::Postgres;
-use crate::sea_orm::{ExecResult, Statement};
 use core_engine_consts::interaction_states::InteractionStates;
 use core_engine_consts::user_states::UserStates;
+use sea_orm::DatabaseBackend::Postgres;
 use sea_orm::{EntityTrait, Set, TransactionTrait};
+use sea_orm::{ExecResult, Statement};
 use sea_orm_migration::{prelude::*, schema::*};
 use strum::{EnumProperty, VariantArray};
 use tracing::info;
@@ -28,7 +28,7 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
-        
+
         manager
             .create_table(
                 Table::create()
@@ -62,7 +62,7 @@ impl MigrationTrait for Migration {
                     .col(pk_uuid("id"))
                     .col(text("name"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
-                    .col(uuid("parent_id"))
+                    .col(uuid_null("parent_id"))
                     .col(boolean("mark_for_delete").default(false))
                     .foreign_key(
                         ForeignKey::create()

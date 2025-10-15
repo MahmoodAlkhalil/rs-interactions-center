@@ -1,13 +1,10 @@
-use crate::db::entities::users::ActiveModel as UsersActiveModel;
-use crate::db::entities::users::Entity as UsersEntity;
-use crate::db::external_entities::user_states_tree_mv::Entity as UserStatesTreeE;
-use crate::dtos::nats::CreateNatsUser;
-use crate::dtos::shared::RequestDto;
-use crate::dtos::users::requests::CreateUser;
-use crate::dtos::users::responses::{User as UserDto, UserState};
+use core_engine_db::entities::users::ActiveModel as UsersActiveModel;
+use core_engine_db::entities::users::Entity as UsersEntity;
+use core_engine_db::external_entities::user_states_tree_mv::Entity as UserStatesTreeE;
+use core_engine_dto::{Request, User, UserState, errors::IcError};
+
 use crate::services::nats as NatsServices;
-use crate::utils::errors::IcError;
-use crate::utils::errors::NoType;
+
 use axum::http::StatusCode;
 use sea_orm::TransactionSession;
 use sea_orm::prelude::*;
@@ -15,36 +12,38 @@ use sea_orm::{ConnectionTrait, Set, TransactionTrait};
 use tokio::task;
 use tracing::error;
 
-pub async fn get_all<B>(request: &RequestDto<'_, NoType, B>) -> Result<Vec<UserDto>, IcError>
+pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<User>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
     let users = UsersEntity::find().all(request.db).await?;
-    let users: Vec<UserDto> = users.iter().map(|e| e.try_into().unwrap()).collect();
+    let users: Vec<User> = users.into_iter().map(|e| e.into()).collect();
     Ok(users)
 }
 
-pub async fn create<B>(request: &RequestDto<'_, CreateUser, B>) -> Result<UserDto, IcError>
+pub async fn create<B>(request: Request<'_, User, B>) -> Result<User, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let tx = request.db.begin().await?;
+    let Request { db, data } = request;
+    let data = data.unwrap();
+    let name = data.name.unwrap();
+    let username = data.username.unwrap();
+    let tx = db.begin().await?;
     let nats_key_pairs = NatsServices::generate_nkeys()?;
     let mut user = UsersActiveModel::new();
-    user.id = Set(Uuid::now_v7());
-    user.username = Set(request.data.as_ref().unwrap().username.clone());
-    user.name = Set(request.data.as_ref().unwrap().name.clone());
+    let user_id = Uuid::now_v7();
+    user.id = Set(user_id);
+    user.username = Set(username);
+    user.name = Set(name);
     user.nkey_seed = Set(nats_key_pairs.seed);
-    user.nkey_pub = Set(nats_key_pairs.pub_key);
+    user.nkey_pub = Set(nats_key_pairs.pub_key.clone());
     let user = user.insert(&tx).await?;
-    let user_id = user.id.clone().to_string();
-    let user_pub_key = user.nkey_pub.clone();
-
     let join_handle = task::spawn_blocking(move || {
-        NatsServices::append_to_users_conf(CreateNatsUser {
-            user_id: user_id.as_str(),
-            pub_key: user_pub_key.as_str(),
-        })
+        NatsServices::append_to_users_conf(
+            user_id.to_string().as_str(),
+            &nats_key_pairs.pub_key.as_str(),
+        )
         .unwrap();
     });
     match join_handle.await {
@@ -64,12 +63,10 @@ where
     Ok(user.into())
 }
 
-pub async fn get_all_states<B>(
-    request: &RequestDto<'_, NoType, B>,
-) -> Result<Vec<UserState>, IcError>
+pub async fn get_all_states<B>(request: Request<'_, (), B>) -> Result<Vec<UserState>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
     let states = UserStatesTreeE::find().all(request.db).await?;
-    Ok(states.iter().map(|state| state.clone().into()).collect())
+    Ok(states.into_iter().map(|state| state.into()).collect())
 }
