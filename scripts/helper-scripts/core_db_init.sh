@@ -1,9 +1,9 @@
 #!/usr/bin/bash
 SCRIPT_PATH="$(realpath "$BASH_SOURCE")"
 SCRIPT_DIR="$(dirname "$(realpath "$BASH_SOURCE")")"
-echo "Script path: $SCRIPT_PATH"
-echo "Script directory: $SCRIPT_DIR"
 
-sea-orm-cli migrate -d $SCRIPT_DIR/../../core-engine-db/migration down
-sea-orm-cli migrate -d $SCRIPT_DIR/../../core-engine-db/migration up
-sea-orm-cli generate entity -o $SCRIPT_DIR/../../core-engine-db/src/entities/
+MIGRATION_DIR="$(realpath "$SCRIPT_DIR/../../core-engine-db/migration")"
+
+sea-orm-cli migrate -d "$MIGRATION_DIR" down
+sea-orm-cli migrate -d "$MIGRATION_DIR" up
+# sea-orm-cli generate entity -o "$ENTITIES_REAL_PATH"

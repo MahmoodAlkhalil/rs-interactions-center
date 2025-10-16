@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 PG_PORT=22455
 NATS_PORT=22456
 NATS_WS_PORT=22457
@@ -108,7 +108,7 @@ podman exec rs-interactions-center-postgres psql -U postgres -c "$UPDATE_USER_PA
 echo "$CREATE_DATABASE_QUERY"
 podman exec rs-interactions-center-postgres psql -U postgres -c "$CREATE_DATABASE_QUERY"
 
-echo "#auto generated env file data" >> $SCRIPT_DIR/../.env
+echo "#auto generated env file data" > $SCRIPT_DIR/../.env
 sed -i '/^RUST_LOG/d' $SCRIPT_DIR/../.env
 echo "RUST_LOG=info" >> $SCRIPT_DIR/../.env
 
@@ -128,4 +128,4 @@ sed -i '/^NATS_NK_BIN_PATH/d' $SCRIPT_DIR/../.env
 echo "NATS_NK_BIN_PATH=$GO_APPS_PATH/bin/nk" >> $SCRIPT_DIR/../.env
 
 
-bash $SCRIPT_DIR/helper-scripts/core_db_init.sh
+/usr/bin/bash $SCRIPT_DIR/helper-scripts/core_db_init.sh
