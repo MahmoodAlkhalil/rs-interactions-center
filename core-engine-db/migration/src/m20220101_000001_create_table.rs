@@ -487,21 +487,26 @@ impl MigrationTrait for Migration {
         for state in UserStates::VARIANTS.iter().copied() {
             let state_id: i32 = state.into();
             let state_name = state.to_string();
+            println!("inserting user state {} {}", state_id, state_name);
             match state.get_int("Parent") {
                 None => {
-                    tx.execute_raw(Statement::from_sql_and_values(
-                        Postgres,
-                        "INSERT INTO user_states (id, name) VALUES ($1,$2)",
-                        [state_id.into(), state_name.into()],
-                    ))
+                    tx.execute_unprepared(
+                        format!(
+                            "INSERT INTO user_states (id, name) VALUES ({},'{}')",
+                            state_id, state_name
+                        )
+                        .as_str(),
+                    )
                     .await?;
                 }
                 Some(parent) => {
-                    tx.execute_raw(Statement::from_sql_and_values(
-                        Postgres,
-                        "INSERT INTO user_states (id, name, parent_id) VALUES ($1,$2,$3)",
-                        [state_id.into(), state_name.into(), parent.into()],
-                    ))
+                    tx.execute_unprepared(
+                        format!(
+                            "INSERT INTO user_states (id, name, parent_id) VALUES ({},'{}',{})",
+                            state_id, state_name, parent
+                        )
+                        .as_str(),
+                    )
                     .await?;
                 }
             }
@@ -512,11 +517,14 @@ impl MigrationTrait for Migration {
         for state in InteractionStates::VARIANTS.iter().copied() {
             let state_id: i32 = state.into();
             let state_name = state.to_string();
-            tx.execute_raw(Statement::from_sql_and_values(
-                Postgres,
-                "INSERT INTO interaction_states (id, name) VALUES ($1,$2)",
-                [state_id.into(), state_name.into()],
-            ))
+            println!("inserting interaction state {} {}", state_id, state_name);
+            tx.execute_unprepared(
+                format!(
+                    "INSERT INTO interaction_states (id, name) VALUES ({},'{}')",
+                    state_id, state_name
+                )
+                .as_str(),
+            )
             .await?;
         }
         tx.commit().await?;

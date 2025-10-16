@@ -17,14 +17,14 @@ core-engine-db = { path = "./core-engine-db" }
 core-engine-dto = { path = "./core-engine-dto" }
 core-engine-db-migration = { path = "./core-engine-db/migration" }
 
-sea-orm = { version = "2.0.0-rc.10", features = [
+sea-orm = { version = "1.1.17", features = [
     "chrono",
     "serde_json",
     "sqlx-postgres",
     "runtime-tokio",
     "with-uuid",
 ] }
-sea-orm-migration = { version = "2.0.0-rc.10", features = [
+sea-orm-migration = { version = "1.1.17", features = [
     "with-uuid",
     "runtime-tokio",
     "sqlx-postgres",

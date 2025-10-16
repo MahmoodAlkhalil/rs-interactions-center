@@ -5,9 +5,7 @@ use core_engine_db::entities::interactions::{
     ActiveModel as InteractionsActiveModel, Entity as InteractionsEntity,
 };
 use core_engine_dto::{Interaction, Request, errors::IcError};
-use sea_orm::{
-    ActiveModelTrait, ConnectionTrait, EntityTrait, Set, TransactionSession, TransactionTrait,
-};
+use sea_orm::{ActiveModelTrait, ConnectionTrait, EntityTrait, Set, TransactionTrait};
 use uuid::Uuid;
 
 pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<Interaction>, IcError>

@@ -21,7 +21,7 @@ use core_engine_db::{cluster_locks::tx_lock, entities::channels};
 use core_engine_dto::{Interaction, Queue, Request, errors::IcError};
 
 use sea_orm::prelude::*;
-use sea_orm::{ConnectionTrait, IntoActiveModel, Set, TransactionSession, TransactionTrait};
+use sea_orm::{ConnectionTrait, IntoActiveModel, Set, TransactionTrait};
 use tower::util::error::optional::None;
 
 pub async fn get_all<B>(request: Request<'_, None, B>) -> Result<Vec<Queue>, IcError>
