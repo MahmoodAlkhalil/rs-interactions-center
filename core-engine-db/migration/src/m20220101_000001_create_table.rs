@@ -1,5 +1,5 @@
-use core_engine_consts::interaction_states::InteractionStates;
-use core_engine_consts::user_states::UserStates;
+use core_engine_const::interaction_states::InteractionStates;
+use core_engine_const::user_states::UserStates;
 use sea_orm::DatabaseBackend::Postgres;
 use sea_orm::{EntityTrait, Set, TransactionTrait};
 use sea_orm::{ExecResult, Statement};

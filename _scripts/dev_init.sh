@@ -67,10 +67,10 @@ podman stop rs-interactions-center-postgres > /dev/null 2>&1
 podman container rm rs-interactions-center-postgres > /dev/null 2>&1
 if [[ -z "$PG_DATA_DIR" ]]; then
     echo "PG_DATA_DIR is empty or not set"
-    podman run -d --replace --name rs-interactions-center-postgres -p $PG_PORT:5432 -e POSTGRES_PASSWORD="$PG_PASS" postgres:$POSTGRES_VERSION 2>/dev/null
+    podman run --restart always -d --replace --name rs-interactions-center-postgres -p $PG_PORT:5432 -e POSTGRES_PASSWORD="$PG_PASS" postgres:$POSTGRES_VERSION 2>/dev/null
 else
     echo "PG_DATA_DIR is set to: $PG_DATA_DIR"
-    podman run -d --replace --name rs-interactions-center-postgres -p $PG_PORT:5432 -e POSTGRES_PASSWORD="$PG_PASS" --volume $PG_DATA_DIR:/var/lib/postgresql postgres:$POSTGRES_VERSION 2>/dev/null
+    podman run --restart always -d --replace --name rs-interactions-center-postgres -p $PG_PORT:5432 -e POSTGRES_PASSWORD="$PG_PASS" --volume $PG_DATA_DIR:/var/lib/postgresql postgres:$POSTGRES_VERSION 2>/dev/null
 fi
 
 
@@ -85,7 +85,7 @@ sed -i "s/\"core_engine_pub_key\"/\"$CORE_ENGINE_PUB\"/g" $SCRIPT_DIR/helper-fil
 
 podman stop rs-interactions-center-nats > /dev/null 2>&1
 podman container rm rs-interactions-center-nats > /dev/null 2>&1
-podman run -d --replace --name rs-interactions-center-nats -p $NATS_PORT:4222 -p $NATS_WS_PORT:4223 -v $SCRIPT_DIR/helper-files/nats/dev-generated:/etc/nats/conf nats:$NATS_VERSION -c /etc/nats/conf/nats.conf
+podman run --restart always -d --replace --name rs-interactions-center-nats -p $NATS_PORT:4222 -p $NATS_WS_PORT:4223 -v $SCRIPT_DIR/helper-files/nats/dev-generated:/etc/nats/conf nats:$NATS_VERSION -c /etc/nats/conf/nats.conf
 
 echo "Waiting for Postgres container to be ready and accepts connections"
 until podman exec rs-interactions-center-postgres pg_isready -U postgres | grep -q "accepting connections"; do

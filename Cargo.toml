@@ -2,29 +2,30 @@
 resolver = "3"
 members = [
     "core-engine",
-    "core-engine-consts",
+    "core-engine-const",
     "core-engine-db",
     "core-engine-db/migration",
     "core-engine-dto",
+    "core-voice",
 ]
-default-members = ["core-engine"]
+default-members = ["core-engine", "core-voice"]
 
 
 [workspace.dependencies]
 core-engine = { path = "./core-engine" }
-core-engine-consts = { path = "./core-engine-consts" }
+core-engine-const = { path = "./core-engine-const" }
 core-engine-db = { path = "./core-engine-db" }
 core-engine-dto = { path = "./core-engine-dto" }
 core-engine-db-migration = { path = "./core-engine-db/migration" }
 
-sea-orm = { version = "1.1.17", features = [
+sea-orm = { version = "2.0.0-rc.10", features = [
     "chrono",
     "serde_json",
     "sqlx-postgres",
     "runtime-tokio",
     "with-uuid",
 ] }
-sea-orm-migration = { version = "1.1.17", features = [
+sea-orm-migration = { version = "2.0.0-rc.10", features = [
     "with-uuid",
     "runtime-tokio",
     "sqlx-postgres",
@@ -41,8 +42,9 @@ uuid = { version = "1.18.1", features = ["v4", "v7"] }
 serde = { version = "1.0.225", features = ["derive"] }
 chrono = { version = "0.4.42", features = ["serde"] }
 futures-util = "0.3.31"
-async-nats = { version = "0.44.2", features = ["default"] }
+async-nats = { version = "0.44.2" }
 hcl-rs = { version = "0.19.4" }
 strum = "0.27.2"
 strum_macros = "0.27.2"
 num_enum = "0.7.4"
+reqwest = "0.12.24"

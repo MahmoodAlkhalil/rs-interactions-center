@@ -1,11 +1,13 @@
 use axum::{Json, http::StatusCode};
-use core_engine_consts::interaction_states::InteractionStates;
+use core_engine_const::interaction_states::InteractionStates;
 use core_engine_db::entities::channels::Entity as ChannelEntity;
 use core_engine_db::entities::interactions::{
     ActiveModel as InteractionsActiveModel, Entity as InteractionsEntity,
 };
 use core_engine_dto::{Interaction, Request, errors::IcError};
-use sea_orm::{ActiveModelTrait, ConnectionTrait, EntityTrait, Set, TransactionTrait};
+use sea_orm::{
+    ActiveModelTrait, ConnectionTrait, EntityTrait, Set, TransactionSession, TransactionTrait,
+};
 use uuid::Uuid;
 
 pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<Interaction>, IcError>

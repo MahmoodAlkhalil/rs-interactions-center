@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2024"
 
 [dependencies]
-core-engine-consts = { workspace = true }
+core-engine-const = { workspace = true }
 core-engine-db = { workspace = true }
 core-engine-dto = { workspace = true }
 sea-orm = { workspace = true }

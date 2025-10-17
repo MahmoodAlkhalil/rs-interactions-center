@@ -3,3 +3,4 @@
 .env
 .env.*
 /scripts/helper-files/nats/dev-generated/*
+/.qodo

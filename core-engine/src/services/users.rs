@@ -4,6 +4,7 @@ use core_engine_db::entities::users::ActiveModel as UsersActiveModel;
 use core_engine_db::entities::users::Entity as UsersEntity;
 use core_engine_db::external_entities::user_states_tree_mv::Entity as UserStatesTreeE;
 use core_engine_dto::{Request, User, UserState, errors::IcError};
+use sea_orm::TransactionSession;
 use sea_orm::prelude::*;
 use sea_orm::{ConnectionTrait, Set, TransactionTrait};
 use tokio::task;

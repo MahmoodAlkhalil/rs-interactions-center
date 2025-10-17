@@ -7,7 +7,7 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use core_engine_consts::interaction_states::InteractionStates;
+use core_engine_const::interaction_states::InteractionStates;
 use core_engine_db::entities::channels::Model as ChannelsM;
 use core_engine_db::entities::groups::Model as GroupsM;
 use core_engine_db::entities::queues::Model as QueuesM;

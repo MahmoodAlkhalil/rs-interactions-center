@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 core-engine-db = { workspace = true }
-core-engine-consts = { workspace = true }
+core-engine-const = { workspace = true }
 serde = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }

@@ -1,7 +1,7 @@
 use crate::utils::validators::validate_interaction_state_change;
 use axum::http::StatusCode;
-use core_engine_consts::defaults::DEFAULT_QUEUE_PRIORITY;
-use core_engine_consts::interaction_states::InteractionStates;
+use core_engine_const::defaults::DEFAULT_QUEUE_PRIORITY;
+use core_engine_const::interaction_states::InteractionStates;
 use core_engine_db::entities::channels::{Column as ChannelsC, Entity as ChannelsE};
 use core_engine_db::entities::interactions::Entity as InteractionsE;
 use core_engine_db::entities::interactions_events::{
@@ -20,8 +20,8 @@ use core_engine_db::links::queues::QueuesToChannels;
 use core_engine_db::{cluster_locks::tx_lock, entities::channels};
 use core_engine_dto::{Interaction, Queue, Request, errors::IcError};
 
-use sea_orm::prelude::*;
 use sea_orm::{ConnectionTrait, IntoActiveModel, Set, TransactionTrait};
+use sea_orm::{TransactionSession, prelude::*};
 use tower::util::error::optional::None;
 
 pub async fn get_all<B>(request: Request<'_, None, B>) -> Result<Vec<Queue>, IcError>
