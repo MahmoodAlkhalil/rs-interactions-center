@@ -2,8 +2,6 @@ use std::string::FromUtf8Error;
 
 use async_nats::ConnectError;
 use axum::http::StatusCode;
-use core_engine_const::interaction_states::InteractionStates;
-use num_enum::TryFromPrimitiveError;
 use sea_orm::DbErr;
 use serde::{Deserialize, Serialize};
 use tracing::error;

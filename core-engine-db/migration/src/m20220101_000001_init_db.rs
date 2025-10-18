@@ -113,6 +113,7 @@ impl MigrationTrait for Migration {
                     .col(pk_uuid("id"))
                     .col(text_uniq("name"))
                     .col(text_null("description"))
+                    .col(boolean("system_state").default(false))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .to_owned(),
             )
@@ -485,42 +486,28 @@ impl MigrationTrait for Migration {
             "INSERT INTO users(id, username, name, nkey_seed, nkey_pub) VALUES ('0199d2ad-8910-7a98-9ba2-b2e322ace221', 'agent2', 'Sample Agent 2', 'SUAFI5WBZRLICZAMTGGEJRBKDMDPPYMWMO3X4M7FMYYCF6UYVXH32B5M3A' ,'UCE2MASNKCKCVFTRPPGZR5AOWQJ6J45MLH7QKNYWKAXR6NYDG35IMBDD')")
             .await?;
 
-        for state in UserStates::VARIANTS.iter().copied() {
-            let state_id = state.get_str("Id").unwrap();
+        for state in UserStates::VARIANTS.into_iter() {
+            let state_id = Uuid::now_v7();
             let state_name = state.to_string();
-            match state.get_int("Parent") {
-                None => {
-                    tx.execute_unprepared(
-                        format!(
-                            "INSERT INTO user_states (id, name) VALUES ('{}','{}')",
-                            state_id, state_name
-                        )
-                        .as_str(),
-                    )
-                    .await?;
-                }
-                Some(parent) => {
-                    tx.execute_unprepared(
-                        format!(
-                            "INSERT INTO user_states (id, name, parent_id) VALUES ('{}','{}','{}')",
-                            state_id, state_name, parent
-                        )
-                        .as_str(),
-                    )
-                    .await?;
-                }
-            }
+            tx.execute_unprepared(
+                format!(
+                    "INSERT INTO user_states (id, name, system_state) VALUES ('{}','{}',true)",
+                    state_id, state_name
+                )
+                .as_str(),
+            )
+            .await?;
         }
 
         tx.execute_unprepared(CREATE_USER_STATES_MATERIALIZED_VIEW)
             .await?;
 
-        for state in InteractionStates::VARIANTS.iter().copied() {
-            let state_id = state.get_str("Id").unwrap();
+        for state in InteractionStates::VARIANTS.into_iter() {
+            let state_id = Uuid::now_v7();
             let state_name = state.to_string();
             tx.execute_unprepared(
                 format!(
-                    "INSERT INTO interaction_states (id, name) VALUES ('{}','{}')",
+                    "INSERT INTO interaction_states (id, name, system_state) VALUES ('{}','{}',true)",
                     state_id, state_name
                 )
                 .as_str(),

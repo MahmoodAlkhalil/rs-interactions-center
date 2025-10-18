@@ -20,9 +20,13 @@ pub fn validate_interaction_state_change(
             InteractionStates::Disconnected => {
                 return Err(StateValidationError::InteractionStateChange);
             }
-            InteractionStates::Closed => return Err(StateValidationError::InteractionStateChange),
-            InteractionStates::Unknown => return Err(StateValidationError::InteractionStateChange),
-            InteractionStates::WrappingUp => {
+            InteractionStates::Closed => {
+                return Err(StateValidationError::InteractionStateChange);
+            }
+            InteractionStates::Unknown => {
+                return Err(StateValidationError::InteractionStateChange);
+            }
+            InteractionStates::WrapUp => {
                 return Err(StateValidationError::InteractionStateChange);
             }
             InteractionStates::Presenting => todo!(),
@@ -36,11 +40,13 @@ pub fn validate_interaction_state_change(
             InteractionStates::Presenting => return Ok(()),
             InteractionStates::Active => return Ok(()),
             InteractionStates::Disconnected => return Ok(()),
-            InteractionStates::WrappingUp => {
+            InteractionStates::WrapUp => {
                 return Err(StateValidationError::InteractionStateChange);
             }
             InteractionStates::Closed => return Ok(()),
-            InteractionStates::Unknown => return Err(StateValidationError::InteractionStateChange),
+            InteractionStates::Unknown => {
+                return Err(StateValidationError::InteractionStateChange);
+            }
         },
         InteractionStates::Dequeued => match new_state {
             InteractionStates::New => return Err(StateValidationError::InteractionStateChange),
@@ -51,21 +57,27 @@ pub fn validate_interaction_state_change(
             InteractionStates::Presenting => {
                 return Err(StateValidationError::InteractionStateChange);
             }
-            InteractionStates::Active => return Err(StateValidationError::InteractionStateChange),
+            InteractionStates::Active => {
+                return Err(StateValidationError::InteractionStateChange);
+            }
             InteractionStates::Disconnected => {
                 return Err(StateValidationError::InteractionStateChange);
             }
-            InteractionStates::WrappingUp => {
+            InteractionStates::WrapUp => {
                 return Err(StateValidationError::InteractionStateChange);
             }
-            InteractionStates::Closed => return Err(StateValidationError::InteractionStateChange),
-            InteractionStates::Unknown => return Err(StateValidationError::InteractionStateChange),
+            InteractionStates::Closed => {
+                return Err(StateValidationError::InteractionStateChange);
+            }
+            InteractionStates::Unknown => {
+                return Err(StateValidationError::InteractionStateChange);
+            }
         },
         InteractionStates::Active => todo!(),
         InteractionStates::Disconnected => todo!(),
         InteractionStates::Closed => todo!(),
         InteractionStates::Unknown => todo!(),
-        InteractionStates::WrappingUp => todo!(),
+        InteractionStates::WrapUp => todo!(),
         InteractionStates::Presenting => todo!(),
     }
     Ok(())

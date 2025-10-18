@@ -7,7 +7,7 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use core_engine_const::interaction_states::{InteractionStates, uuid_to_interaction_state_name};
+use core_engine_const::interaction_states::InteractionStates;
 use core_engine_db::entities::channels::Model as ChannelsM;
 use core_engine_db::entities::groups::Model as GroupsM;
 use core_engine_db::entities::queues::Model as QueuesM;
@@ -70,7 +70,6 @@ impl From<core_engine_db::entities::interactions::Model> for Interaction {
         Interaction {
             id: Some(value.id),
             state: Some(value.state),
-            state_name: Some(uuid_to_interaction_state_name(&value.state)),
             queue: None,
             created_at: Some(value.created_at.to_utc()),
             ..Default::default()

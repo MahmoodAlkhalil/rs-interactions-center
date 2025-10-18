@@ -517,7 +517,6 @@ dependencies = [
  "dotenv",
  "futures-util",
  "hcl-rs",
- "num_enum",
  "sea-orm",
  "sea-orm-migration",
  "serde",
@@ -534,7 +533,6 @@ dependencies = [
 name = "core-engine-const"
 version = "0.0.1"
 dependencies = [
- "num_enum",
  "strum",
  "strum_macros",
  "uuid",
@@ -558,7 +556,6 @@ name = "core-engine-db-migration"
 version = "0.0.1"
 dependencies = [
  "core-engine-const",
- "num_enum",
  "sea-orm",
  "sea-orm-migration",
  "serde",
@@ -578,7 +575,6 @@ dependencies = [
  "chrono",
  "core-engine-const",
  "core-engine-db",
- "num_enum",
  "sea-orm",
  "serde",
  "strum",
@@ -1847,28 +1843,6 @@ checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
  "libm",
-]
-
-[[package]]
-name = "num_enum"
-version = "0.7.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a973b4e44ce6cad84ce69d797acf9a044532e4184c4f267913d1b546a0727b7a"
-dependencies = [
- "num_enum_derive",
- "rustversion",
-]
-
-[[package]]
-name = "num_enum_derive"
-version = "0.7.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77e878c846a8abae00dd069496dbe8751b16ac1c3d6bd2a7283a938e8228f90d"
-dependencies = [
- "proc-macro-crate",
- "proc-macro2",
- "quote",
- "syn 2.0.106",
 ]
 
 [[package]]

@@ -3,15 +3,21 @@ use std::str::FromStr;
 use axum::{Json, http::StatusCode};
 use core_engine_const::interaction_states::InteractionStates;
 use core_engine_db::entities::channels::Entity as ChannelEntity;
+use core_engine_db::entities::interaction_states::Entity as InteractionStatesE;
 use core_engine_db::entities::interactions::{
     ActiveModel as InteractionsActiveModel, Entity as InteractionsEntity,
 };
 use core_engine_dto::{Interaction, Request, errors::IcError};
 use sea_orm::{
-    ActiveModelTrait, ConnectionTrait, EntityTrait, Set, TransactionSession, TransactionTrait,
+    ActiveModelTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Set, TransactionSession,
+    TransactionTrait,
 };
-use strum::EnumProperty;
+use strum::{EnumProperty, VariantArray};
+use tokio::time::Instant;
+use tracing::info;
 use uuid::Uuid;
+
+use crate::utils::local_caches::{INTERACTION_STATE_TO_UUID, UUID_TO_INTERACTION_STATE};
 pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<Interaction>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
@@ -45,4 +51,57 @@ where
         .await?;
     tx.commit().await?;
     Ok(interaction.into())
+}
+
+pub async fn init_interaction_states_local_cache(db: &DatabaseConnection) -> Result<(), IcError> {
+    let db_interaction_states = InteractionStatesE::find().all(db).await?;
+    let enum_interaction_states = InteractionStates::VARIANTS;
+
+    for db_state in db_interaction_states.into_iter() {
+        for enum_state in enum_interaction_states.iter() {
+            if db_state.name.as_str() == enum_state.to_string() {
+                let start = Instant::now();
+                {
+                    INTERACTION_STATE_TO_UUID
+                        .write()
+                        .await
+                        .insert(enum_state.clone(), db_state.id.clone());
+                }
+                let elapsed = start.elapsed();
+                print_dynamic_time(elapsed);
+                {
+                    UUID_TO_INTERACTION_STATE
+                        .write()
+                        .await
+                        .insert(db_state.id.clone(), enum_state.clone());
+                }
+            }
+        }
+    }
+    info!(
+        "prepared interaction states to UUID local hasmap {:?}",
+        INTERACTION_STATE_TO_UUID
+    );
+    info!(
+        "prepared UUID to interaction states local hasmap {:?}",
+        UUID_TO_INTERACTION_STATE
+    );
+    Ok(())
+}
+
+fn print_dynamic_time(elapsed: std::time::Duration) {
+    let nanos = elapsed.as_nanos();
+    let micros = elapsed.as_micros();
+    let millis = elapsed.as_millis();
+
+    if nanos < 1_000 {
+        info!("Elapsed: {} ns", nanos);
+    } else if micros < 1_000 {
+        info!("Elapsed: {} µs", micros);
+    } else if millis < 1_000 {
+        info!("Elapsed: {} ms", millis);
+    } else {
+        let secs = elapsed.as_secs_f64();
+        info!("Elapsed: {:.3} s", secs);
+    }
 }

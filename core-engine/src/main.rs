@@ -16,14 +16,15 @@ mod utils;
 async fn main() -> Result<(), IcError> {
     dotenv::dotenv().ok();
     //todo [make logging format an env variable]
-    tracing_subscriber::fmt()
-        .json()
-        .with_current_span(true)
-        .with_span_list(false)
-        .init();
-    // tracing_subscriber::fmt().with_max_level(Level::INFO).init();
+    // tracing_subscriber::fmt()
+    //     .json()
+    //     .with_current_span(true)
+    //     .with_span_list(false)
+    //     .init();
+    tracing_subscriber::fmt().with_max_level(Level::INFO).init();
     let db_pool = init_database_pool().await?;
     let nats_client = init_nats_client().await?;
+    init_local_caches(&db_pool).await?;
     let shared_state = Arc::new(SharedState::new(db_pool, nats_client));
     start_http_server(Arc::clone(&shared_state)).await?;
     Ok(())
@@ -49,6 +50,10 @@ async fn init_nats_client() -> Result<Client, IcError> {
     let options: async_nats::ConnectOptions = async_nats::ConnectOptions::new().nkey(nats_seed);
     let client = async_nats::connect_with_options(nats_url, options).await?;
     Ok(client)
+}
+
+async fn init_local_caches(db: &DatabaseConnection) -> Result<(), IcError> {
+    services::interactions::init_interaction_states_local_cache(db).await
 }
 
 async fn start_http_server(shared_state: Arc<SharedState>) -> Result<(), IcError> {
