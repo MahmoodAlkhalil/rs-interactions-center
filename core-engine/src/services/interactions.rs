@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use axum::{Json, http::StatusCode};
 use core_engine_const::interaction_states::InteractionStates;
 use core_engine_db::entities::channels::Entity as ChannelEntity;
@@ -8,8 +10,8 @@ use core_engine_dto::{Interaction, Request, errors::IcError};
 use sea_orm::{
     ActiveModelTrait, ConnectionTrait, EntityTrait, Set, TransactionSession, TransactionTrait,
 };
+use strum::EnumProperty;
 use uuid::Uuid;
-
 pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<Interaction>, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
@@ -35,7 +37,7 @@ where
         })?;
     let interaction = InteractionsActiveModel {
         id: Set(Uuid::now_v7()),
-        state: Set(InteractionStates::New.into()),
+        state: Set(Uuid::from_str(InteractionStates::New.get_str("Id").unwrap()).unwrap()),
         ..Default::default()
     };
     let interaction = InteractionsEntity::insert(interaction)

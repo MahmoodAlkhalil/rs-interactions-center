@@ -522,6 +522,7 @@ dependencies = [
  "sea-orm-migration",
  "serde",
  "serde_json",
+ "strum",
  "tokio",
  "tower",
  "tracing",
@@ -536,6 +537,7 @@ dependencies = [
  "num_enum",
  "strum",
  "strum_macros",
+ "uuid",
 ]
 
 [[package]]
@@ -1513,6 +1515,12 @@ dependencies = [
  "serde",
  "serde_core",
 ]
+
+[[package]]
+name = "indoc"
+version = "2.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4c7245a08504955605670dbf141fceab975f15ca21570696aebe9d2e71576bd"
 
 [[package]]
 name = "inherent"
@@ -2565,14 +2573,15 @@ dependencies = [
 
 [[package]]
 name = "sea-orm-cli"
-version = "2.0.0-rc.10"
+version = "2.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd68cd7fffcfd5262a2d5ae8f425305c0fccaf1354b9dd9159a4d316efff6ca7"
+checksum = "6eaa9dbc5387247221638237115acc44506203655e321c63cc3c025817c614e9"
 dependencies = [
  "chrono",
  "clap",
  "dotenvy",
  "glob",
+ "indoc",
  "regex",
  "sea-schema",
  "sqlx",

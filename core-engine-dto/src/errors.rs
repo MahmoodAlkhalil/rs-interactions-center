@@ -62,16 +62,6 @@ impl From<ConnectError> for IcError {
     }
 }
 
-impl From<TryFromPrimitiveError<InteractionStates>> for IcError {
-    fn from(error: TryFromPrimitiveError<InteractionStates>) -> Self {
-        error!("InteractionStates enum conversion error {}", error);
-        IcError {
-            status_code: StatusCode::INTERNAL_SERVER_ERROR,
-            message: "server error, interaction state conversion failure, check logs".to_string(),
-        }
-    }
-}
-
 impl From<std::io::Error> for IcError {
     fn from(value: std::io::Error) -> Self {
         error!("std::io::Error {}", value);

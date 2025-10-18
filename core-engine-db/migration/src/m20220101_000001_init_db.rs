@@ -48,7 +48,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table("interactions")
                     .col(pk_uuid("id"))
-                    .col(integer("state"))
+                    .col(uuid("state"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .to_owned(),
             )
@@ -110,7 +110,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table("interaction_states")
                     .if_not_exists()
-                    .col(integer("id").primary_key())
+                    .col(pk_uuid("id"))
                     .col(text_uniq("name"))
                     .col(text_null("description"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
@@ -123,10 +123,10 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table("user_states")
                     .if_not_exists()
-                    .col(integer("id").primary_key())
+                    .col(pk_uuid("id"))
                     .col(text_uniq("name"))
                     .col(text_null("description"))
-                    .col(integer_null("parent_id"))
+                    .col(uuid_null("parent_id"))
                     .col(boolean("mark_for_delete").default(false))
                     .col(boolean("system_state").default(false))
                     .col(boolean("user_control_allowed").default(true))
@@ -147,8 +147,8 @@ impl MigrationTrait for Migration {
                     .col(pk_auto("id"))
                     .col(uuid("interaction_id"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
-                    .col(integer("old_state"))
-                    .col(integer("new_state"))
+                    .col(uuid_null("old_state"))
+                    .col(uuid("new_state"))
                     .col(uuid_null("queue_id"))
                     .col(uuid_null("user_id"))
                     .col(uuid_null("channel_id"))
@@ -323,7 +323,7 @@ impl MigrationTrait for Migration {
                     .to_owned()
                     .if_not_exists()
                     .col(pk_uuid("id"))
-                    .col(integer("state"))
+                    .col(uuid("state"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .col(
                         timestamp_with_time_zone("state_updated_at")
@@ -484,15 +484,15 @@ impl MigrationTrait for Migration {
         tx.execute_unprepared(
             "INSERT INTO users(id, username, name, nkey_seed, nkey_pub) VALUES ('0199d2ad-8910-7a98-9ba2-b2e322ace221', 'agent2', 'Sample Agent 2', 'SUAFI5WBZRLICZAMTGGEJRBKDMDPPYMWMO3X4M7FMYYCF6UYVXH32B5M3A' ,'UCE2MASNKCKCVFTRPPGZR5AOWQJ6J45MLH7QKNYWKAXR6NYDG35IMBDD')")
             .await?;
+
         for state in UserStates::VARIANTS.iter().copied() {
-            let state_id: i32 = state.into();
+            let state_id = state.get_str("Id").unwrap();
             let state_name = state.to_string();
-            println!("inserting user state {} {}", state_id, state_name);
             match state.get_int("Parent") {
                 None => {
                     tx.execute_unprepared(
                         format!(
-                            "INSERT INTO user_states (id, name) VALUES ({},'{}')",
+                            "INSERT INTO user_states (id, name) VALUES ('{}','{}')",
                             state_id, state_name
                         )
                         .as_str(),
@@ -502,7 +502,7 @@ impl MigrationTrait for Migration {
                 Some(parent) => {
                     tx.execute_unprepared(
                         format!(
-                            "INSERT INTO user_states (id, name, parent_id) VALUES ({},'{}',{})",
+                            "INSERT INTO user_states (id, name, parent_id) VALUES ('{}','{}','{}')",
                             state_id, state_name, parent
                         )
                         .as_str(),
@@ -511,16 +511,16 @@ impl MigrationTrait for Migration {
                 }
             }
         }
+
         tx.execute_unprepared(CREATE_USER_STATES_MATERIALIZED_VIEW)
             .await?;
 
         for state in InteractionStates::VARIANTS.iter().copied() {
-            let state_id: i32 = state.into();
+            let state_id = state.get_str("Id").unwrap();
             let state_name = state.to_string();
-            println!("inserting interaction state {} {}", state_id, state_name);
             tx.execute_unprepared(
                 format!(
-                    "INSERT INTO interaction_states (id, name) VALUES ({},'{}')",
+                    "INSERT INTO interaction_states (id, name) VALUES ('{}','{}')",
                     state_id, state_name
                 )
                 .as_str(),

@@ -36,7 +36,7 @@ pub struct Group {
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Interaction {
     pub id: Option<Uuid>,
-    pub state: Option<i32>,
+    pub state: Option<Uuid>,
     pub state_name: Option<String>,
     pub queue: Option<Queue>,
     pub priority: Option<i32>,
@@ -63,12 +63,12 @@ pub struct Skill {
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct UserState {
-    pub id: Option<i32>,
+    pub id: Option<Uuid>,
     pub name: Option<String>,
-    pub parent_id: Option<i32>,
+    pub parent_id: Option<Uuid>,
     pub mark_for_delete: Option<bool>,
     pub level: Option<i32>,
-    pub path: Option<Vec<i32>>,
+    pub path: Option<Vec<Uuid>>,
     pub full_path: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
 }

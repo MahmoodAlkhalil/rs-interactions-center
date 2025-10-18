@@ -1,7 +1,12 @@
+use std::str::FromStr;
+
 use crate::utils::validators::validate_interaction_state_change;
 use axum::http::StatusCode;
-use core_engine_const::defaults::DEFAULT_QUEUE_PRIORITY;
 use core_engine_const::interaction_states::InteractionStates;
+use core_engine_const::{
+    defaults::DEFAULT_QUEUE_PRIORITY,
+    interaction_states::{interaction_state_to_uuid, uuid_to_interaction_state},
+};
 use core_engine_db::entities::channels::{Column as ChannelsC, Entity as ChannelsE};
 use core_engine_db::entities::interactions::Entity as InteractionsE;
 use core_engine_db::entities::interactions_events::{
@@ -22,6 +27,7 @@ use core_engine_dto::{Interaction, Queue, Request, errors::IcError};
 
 use sea_orm::{ConnectionTrait, IntoActiveModel, Set, TransactionTrait};
 use sea_orm::{TransactionSession, prelude::*};
+use strum::EnumProperty;
 use tower::util::error::optional::None;
 
 pub async fn get_all<B>(request: Request<'_, None, B>) -> Result<Vec<Queue>, IcError>
@@ -160,8 +166,11 @@ where
             status_code: StatusCode::BAD_REQUEST,
             message: "interaction not found".to_string(),
         })?;
-    let new_state = InteractionStates::Enqueued;
-    validate_interaction_state_change(InteractionStates::try_from(interaction.state)?, new_state)?;
+
+    validate_interaction_state_change(
+        uuid_to_interaction_state(&interaction.state),
+        InteractionStates::Enqueued,
+    )?;
     let enqueued_interaction = RuntimeInteractionsQueuesAM {
         queue_id: Set(queue.id),
         interaction_id: Set(interaction.id),
@@ -173,8 +182,8 @@ where
         .await?;
     let interaction_event = InteractionsEventsAM {
         interaction_id: Set(interaction.id),
-        old_state: Set(interaction.state),
-        new_state: Set(new_state.into()),
+        old_state: Set(Some(interaction.state)),
+        new_state: Set(interaction_state_to_uuid(InteractionStates::Enqueued)),
         queue_id: Set(Some(queue.id)),
         ..Default::default()
     };
@@ -182,7 +191,7 @@ where
         .exec_without_returning(&tx)
         .await?;
     let mut interaction = interaction.into_active_model();
-    interaction.state = Set(new_state.into());
+    interaction.state = Set(interaction_state_to_uuid(InteractionStates::Enqueued));
     let interaction = InteractionsE::update(interaction).exec(&tx).await?;
     tx.commit().await?;
     Ok(interaction.into())
@@ -215,8 +224,10 @@ where
             status_code: StatusCode::BAD_REQUEST,
             message: "interaction not found".to_string(),
         })?;
-    let new_state = InteractionStates::Dequeued;
-    validate_interaction_state_change(InteractionStates::try_from(interaction.state)?, new_state)?;
+    validate_interaction_state_change(
+        uuid_to_interaction_state(&interaction.state),
+        InteractionStates::Dequeued,
+    )?;
     RuntimeInteractionsQueuesE::delete_by_id((
         enqueued_interaction.queue_id,
         enqueued_interaction.interaction_id,
@@ -225,8 +236,8 @@ where
     .await?;
     let interaction_event = InteractionsEventsAM {
         interaction_id: Set(interaction.id),
-        old_state: Set(interaction.state),
-        new_state: Set(new_state.into()),
+        old_state: Set(Some(interaction.state)),
+        new_state: Set(interaction_state_to_uuid(InteractionStates::Dequeued)),
         queue_id: Set(Some(enqueued_interaction.queue_id)),
         ..Default::default()
     };
@@ -234,7 +245,7 @@ where
         .exec_without_returning(&tx)
         .await?;
     let mut interaction = interaction.into_active_model();
-    interaction.state = Set(new_state.into());
+    interaction.state = Set(interaction_state_to_uuid(InteractionStates::Dequeued));
     let interaction = InteractionsE::update(interaction).exec(&tx).await?;
     tx.commit().await?;
     Ok(interaction.into())

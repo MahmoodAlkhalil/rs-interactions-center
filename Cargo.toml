@@ -8,7 +8,7 @@ members = [
     "core-engine-dto",
     "core-voice",
 ]
-default-members = ["core-engine", "core-voice"]
+default-members = ["core-engine"]
 
 
 [workspace.dependencies]
