@@ -99,3 +99,14 @@ impl<T> ApiResponse<T> {
         }
     }
 }
+
+#[derive(Serialize, Deserialize)]
+pub enum ChannelMessageType {}
+
+#[derive(Serialize, Deserialize)]
+pub struct ChannelMessage {
+    pub r#type: ChannelMessageType,
+    pub interaction: Option<Interaction>,
+    pub queue: Option<Queue>,
+    pub channel: Option<Channel>,
+}
