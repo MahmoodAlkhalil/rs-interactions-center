@@ -23,7 +23,7 @@ pub async fn create<B>(request: Request<'_, User, B>) -> Result<User, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let Request { db, data } = request;
+    let Request { db, data, id } = request;
     let data = data.unwrap();
     let name = data.name.unwrap();
     let username = data.username.unwrap();

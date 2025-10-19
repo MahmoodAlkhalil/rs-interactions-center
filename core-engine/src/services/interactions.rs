@@ -31,7 +31,7 @@ pub async fn create<B>(request: Request<'_, Interaction, B>) -> Result<Interacti
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let Request { db, data } = request;
+    let Request { id, db, data } = request;
     let data = data.unwrap();
     let tx = db.begin().await?;
     ChannelEntity::find_by_id(data.channel.unwrap().id.unwrap())

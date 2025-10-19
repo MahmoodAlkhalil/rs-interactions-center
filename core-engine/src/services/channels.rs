@@ -33,7 +33,7 @@ pub async fn create<B>(request: Request<'_, Channel, B>) -> Result<Channel, IcEr
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let Request { db, data } = request;
+    let Request { id, db, data } = request;
     let data = data.unwrap();
     let mut channel = ChannelsAM::new();
     channel.id = Set(Uuid::now_v7());

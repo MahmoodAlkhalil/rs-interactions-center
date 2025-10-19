@@ -1,5 +1,5 @@
-use crate::services::users as UsersService;
 use crate::utils::SharedState;
+use crate::{services::users as UsersService, utils::axum::RequestId};
 use axum::extract::State;
 use axum::routing::{get, post};
 use axum::{Json, Router, debug_handler};
@@ -14,19 +14,29 @@ pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
         .with_state(api_shared_data)
 }
 #[debug_handler]
-async fn get_all(state: State<Arc<SharedState>>) -> ApiResponse<Vec<User>> {
-    let dto = Request::new(None, &state.db_pool);
+async fn get_all(
+    state: State<Arc<SharedState>>,
+    RequestId(request_id): RequestId,
+) -> ApiResponse<Vec<User>> {
+    let dto = Request::new(request_id, None, &state.db_pool);
     UsersService::get_all(dto).await.into_api_response()
 }
 
 #[debug_handler]
-async fn create(state: State<Arc<SharedState>>, Json(request): Json<User>) -> ApiResponse<User> {
-    let dto = Request::new(Some(request), &state.db_pool);
+async fn create(
+    state: State<Arc<SharedState>>,
+    RequestId(request_id): RequestId,
+    Json(request): Json<User>,
+) -> ApiResponse<User> {
+    let dto = Request::new(request_id, Some(request), &state.db_pool);
     UsersService::create(dto).await.into_api_response()
 }
 
 #[debug_handler]
-async fn get_all_states(state: State<Arc<SharedState>>) -> ApiResponse<Vec<UserState>> {
-    let dto = Request::new(None, &state.db_pool);
+async fn get_all_states(
+    state: State<Arc<SharedState>>,
+    RequestId(request_id): RequestId,
+) -> ApiResponse<Vec<UserState>> {
+    let dto = Request::new(request_id, None, &state.db_pool);
     UsersService::get_all_states(dto).await.into_api_response()
 }

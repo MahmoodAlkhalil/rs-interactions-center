@@ -3,6 +3,7 @@ use crate::utils::axum::RequestIdLayer;
 use async_nats::Client;
 use axum::Router;
 use core_engine_dto::errors::IcError;
+use futures_util::SinkExt;
 use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 use std::env;
 use std::sync::Arc;

@@ -45,7 +45,7 @@ pub async fn create<B>(request: Request<'_, Queue, B>) -> Result<Queue, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let Request { data, db } = request;
+    let Request { id, data, db } = request;
     let data = data.unwrap();
     let name = data.name.unwrap();
     let channels = data.channels;
@@ -94,7 +94,7 @@ pub async fn replace_queues_channels_assignments<B>(
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let Request { data, db } = request;
+    let Request { id, data, db } = request;
     let data = data.unwrap();
     let queue_id = data.id.unwrap();
     let channels = data.channels.unwrap();
@@ -144,7 +144,7 @@ pub async fn enqueue_interaction<B>(
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let Request { db, data } = request;
+    let Request { id, db, data } = request;
     let data = data.unwrap();
     let interaction_id = data.id.unwrap();
     let queue_id = data.queue.unwrap().id.unwrap();
@@ -181,9 +181,11 @@ where
         .exec_without_returning(&tx)
         .await?;
     let interaction_event = InteractionsEventsAM {
-        interaction_id: Set(interaction.id),
+        id: Set(interaction.id),
         old_state: Set(Some(interaction.state)),
-        new_state: Set(interaction_state_to_uuid(InteractionStates::Enqueued).await?),
+        new_state: Set(Some(
+            interaction_state_to_uuid(InteractionStates::Enqueued).await?,
+        )),
         queue_id: Set(Some(queue.id)),
         ..Default::default()
     };
@@ -203,7 +205,7 @@ pub async fn dequeue_interaction<B>(
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let Request { db, data } = request;
+    let Request { db, data, id } = request;
     let data = data.unwrap();
     let interaction_id = data.id.unwrap();
     let tx = db.begin().await?;
@@ -235,9 +237,11 @@ where
     .exec(&tx)
     .await?;
     let interaction_event = InteractionsEventsAM {
-        interaction_id: Set(interaction.id),
+        id: Set(interaction.id),
         old_state: Set(Some(interaction.state)),
-        // new_state: Set(interaction_state_to_uuid(InteractionStates::Dequeued)),
+        new_state: Set(Some(
+            interaction_state_to_uuid(InteractionStates::Dequeued).await?,
+        )),
         queue_id: Set(Some(enqueued_interaction.queue_id)),
         ..Default::default()
     };

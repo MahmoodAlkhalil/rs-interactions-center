@@ -78,8 +78,18 @@ pub struct Request<'a, A, B>
 where
     B: ConnectionTrait + TransactionTrait,
 {
+    pub id: Uuid,
     pub data: Option<A>,
     pub db: &'a B,
+}
+
+impl<'a, A, B> Request<'a, A, B>
+where
+    B: ConnectionTrait + TransactionTrait,
+{
+    pub fn new(id: Uuid, data: Option<A>, db: &'a B) -> Self {
+        Self { id, data, db }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -101,12 +111,27 @@ impl<T> ApiResponse<T> {
 }
 
 #[derive(Serialize, Deserialize)]
-pub enum ChannelMessageType {}
+pub enum ChannelMessageType {
+    New,
+    Update,
+    Delete,
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum ChannelMessageTarget {
+    Interaction,
+    Queue,
+    Channel,
+    User,
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct ChannelMessage {
+    pub id: Uuid,
     pub r#type: ChannelMessageType,
+    pub target: ChannelMessageTarget,
     pub interaction: Option<Interaction>,
     pub queue: Option<Queue>,
     pub channel: Option<Channel>,
+    pub user: Option<User>,
 }

@@ -6,76 +6,18 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "interactions_events")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i32,
-    pub interaction_id: Uuid,
+    pub internal_id: i64,
+    pub id: Uuid,
+    pub r#type: i32,
     pub created_at: DateTimeWithTimeZone,
     pub old_state: Option<Uuid>,
-    pub new_state: Uuid,
+    pub new_state: Option<Uuid>,
     pub queue_id: Option<Uuid>,
     pub user_id: Option<Uuid>,
     pub channel_id: Option<Uuid>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::channels::Entity",
-        from = "Column::ChannelId",
-        to = "super::channels::Column::Id",
-        on_update = "NoAction",
-        on_delete = "Cascade"
-    )]
-    Channels,
-    #[sea_orm(
-        belongs_to = "super::interaction_states::Entity",
-        from = "Column::NewState",
-        to = "super::interaction_states::Column::Id",
-        on_update = "NoAction",
-        on_delete = "Cascade"
-    )]
-    InteractionStates2,
-    #[sea_orm(
-        belongs_to = "super::interaction_states::Entity",
-        from = "Column::OldState",
-        to = "super::interaction_states::Column::Id",
-        on_update = "NoAction",
-        on_delete = "Cascade"
-    )]
-    InteractionStates1,
-    #[sea_orm(
-        belongs_to = "super::queues::Entity",
-        from = "Column::QueueId",
-        to = "super::queues::Column::Id",
-        on_update = "NoAction",
-        on_delete = "Cascade"
-    )]
-    Queues,
-    #[sea_orm(
-        belongs_to = "super::users::Entity",
-        from = "Column::UserId",
-        to = "super::users::Column::Id",
-        on_update = "NoAction",
-        on_delete = "Cascade"
-    )]
-    Users,
-}
-
-impl Related<super::channels::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Channels.def()
-    }
-}
-
-impl Related<super::queues::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Queues.def()
-    }
-}
-
-impl Related<super::users::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Users.def()
-    }
-}
+pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}

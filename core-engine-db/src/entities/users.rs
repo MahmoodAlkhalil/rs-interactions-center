@@ -11,6 +11,7 @@ pub struct Model {
     pub username: String,
     #[sea_orm(column_type = "Text", unique)]
     pub name: String,
+    pub state: Uuid,
     #[sea_orm(column_type = "Text", unique)]
     pub nkey_seed: String,
     #[sea_orm(column_type = "Text", unique)]
@@ -22,8 +23,6 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::interactions_events::Entity")]
-    InteractionsEvents,
     #[sea_orm(has_one = "super::runtime_users::Entity")]
     RuntimeUsers,
     #[sea_orm(has_many = "super::runtime_users_queues::Entity")]
@@ -34,12 +33,6 @@ pub enum Relation {
     UsersQueuesAssignment,
     #[sea_orm(has_many = "super::users_skills_assignment::Entity")]
     UsersSkillsAssignment,
-}
-
-impl Related<super::interactions_events::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::InteractionsEvents.def()
-    }
 }
 
 impl Related<super::runtime_users::Entity> for Entity {

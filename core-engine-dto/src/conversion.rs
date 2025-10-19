@@ -138,14 +138,6 @@ impl From<UserStatesTreeM> for UserState {
     }
 }
 
-impl<'a, A, B> Request<'a, A, B>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    pub fn new(data: Option<A>, db: &'a B) -> Self {
-        Self { data, db }
-    }
-}
 
 pub trait IntoApiResponse<T> {
     fn into_api_response(self) -> ApiResponse<T>;

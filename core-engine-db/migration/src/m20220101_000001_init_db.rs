@@ -14,97 +14,7 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        manager
-            .create_table(
-                Table::create()
-                    .table("channels")
-                    .if_not_exists()
-                    .col(pk_uuid("id"))
-                    .col(text_uniq("name"))
-                    .col(text_null("description"))
-                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
-                    .col(boolean("mark_for_delete").default(false))
-                    .col(boolean("online").default(false))
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_table(
-                Table::create()
-                    .table("groups")
-                    .if_not_exists()
-                    .col(pk_uuid("id"))
-                    .col(text_uniq("name"))
-                    .col(text_null("description"))
-                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
-                    .col(boolean("mark_for_delete").default(false))
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_table(
-                Table::create()
-                    .table("interactions")
-                    .col(pk_uuid("id"))
-                    .col(uuid("state"))
-                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
-                    .to_owned(),
-            )
-            .await?;
-        manager
-            .create_table(
-                Table::create()
-                    .table("skills")
-                    .to_owned()
-                    .if_not_exists()
-                    .col(pk_uuid("id"))
-                    .col(text("name"))
-                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
-                    .col(uuid_null("parent_id"))
-                    .col(boolean("mark_for_delete").default(false))
-                    .foreign_key(
-                        ForeignKey::create()
-                            .from("skills", "parent_id")
-                            .to("skills", "id")
-                            .on_delete(ForeignKeyAction::Cascade),
-                    )
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_table(
-                Table::create()
-                    .table("users")
-                    .to_owned()
-                    .if_not_exists()
-                    .col(pk_uuid("id"))
-                    .col(text("username"))
-                    .col(text("name").unique_key())
-                    .col(text("nkey_seed").unique_key())
-                    .col(text("nkey_pub").unique_key())
-                    .col(boolean("service_account").default(false))
-                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
-                    .col(boolean("mark_for_delete").default(false))
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_table(
-                Table::create()
-                    .table("queues")
-                    .if_not_exists()
-                    .col(pk_uuid("id"))
-                    .col(text_uniq("name").not_null())
-                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
-                    .col(boolean("mark_for_delete").default(false))
-                    .to_owned(),
-            )
-            .await?;
-
+        println!("creating interaction_states");
         manager
             .create_table(
                 Table::create()
@@ -119,6 +29,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        println!("creating user_states");
         manager
             .create_table(
                 Table::create()
@@ -141,51 +52,130 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+
+        println!("creating channels");
+        manager
+            .create_table(
+                Table::create()
+                    .table("channels")
+                    .if_not_exists()
+                    .col(pk_uuid("id"))
+                    .col(text_uniq("name"))
+                    .col(text_null("description"))
+                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
+                    .col(boolean("mark_for_delete").default(false))
+                    .col(boolean("online").default(false))
+                    .index(Index::create().col("id").unique())
+                    .to_owned(),
+            )
+            .await?;
+
+        println!("creating groups");
+        manager
+            .create_table(
+                Table::create()
+                    .table("groups")
+                    .if_not_exists()
+                    .col(pk_uuid("id"))
+                    .col(text_uniq("name"))
+                    .col(text_null("description"))
+                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
+                    .col(boolean("mark_for_delete").default(false))
+                    .index(Index::create().col("id").unique())
+                    .to_owned(),
+            )
+            .await?;
+        println!("creating interactions");
+        manager
+            .create_table(
+                Table::create()
+                    .table("interactions")
+                    .col(pk_uuid("id"))
+                    .col(uuid("state"))
+                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
+                    .index(Index::create().col("id").unique())
+                    .to_owned(),
+            )
+            .await?;
+
+        println!("creating skills");
+        manager
+            .create_table(
+                Table::create()
+                    .table("skills")
+                    .to_owned()
+                    .if_not_exists()
+                    .col(pk_uuid("id"))
+                    .col(text("name"))
+                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
+                    .col(uuid_null("parent_id"))
+                    .col(boolean("mark_for_delete").default(false))
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from("skills", "parent_id")
+                            .to("skills", "id")
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
+                    .index(Index::create().col("id").unique())
+                    .to_owned(),
+            )
+            .await?;
+
+        println!("creating users");
+        manager
+            .create_table(
+                Table::create()
+                    .table("users")
+                    .to_owned()
+                    .if_not_exists()
+                    .col(pk_uuid("id"))
+                    .col(text("username"))
+                    .col(text("name").unique_key())
+                    .col(uuid("state"))
+                    .col(text("nkey_seed").unique_key())
+                    .col(text("nkey_pub").unique_key())
+                    .col(boolean("service_account").default(false))
+                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
+                    .col(boolean("mark_for_delete").default(false))
+                    .index(Index::create().col("id").unique())
+                    .to_owned(),
+            )
+            .await?;
+
+        println!("creating queues");
+        manager
+            .create_table(
+                Table::create()
+                    .table("queues")
+                    .if_not_exists()
+                    .col(pk_uuid("id"))
+                    .col(text_uniq("name").not_null())
+                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
+                    .col(boolean("mark_for_delete").default(false))
+                    .index(Index::create().col("id").unique())
+                    .to_owned(),
+            )
+            .await?;
+
+        println!("creating interactions_events");
         manager
             .create_table(
                 Table::create()
                     .table("interactions_events")
-                    .col(pk_auto("id"))
-                    .col(uuid("interaction_id"))
+                    .col(big_pk_auto("internal_id"))
+                    .col(uuid("id"))
+                    .col(integer("type"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .col(uuid_null("old_state"))
-                    .col(uuid("new_state"))
+                    .col(uuid_null("new_state"))
                     .col(uuid_null("queue_id"))
                     .col(uuid_null("user_id"))
                     .col(uuid_null("channel_id"))
-                    .foreign_key(
-                        ForeignKey::create()
-                            .from("interactions_events", "old_state")
-                            .to("interaction_states", "id")
-                            .on_delete(ForeignKeyAction::Cascade),
-                    )
-                    .foreign_key(
-                        ForeignKey::create()
-                            .from("interactions_events", "new_state")
-                            .to("interaction_states", "id")
-                            .on_delete(ForeignKeyAction::Cascade),
-                    )
-                    .foreign_key(
-                        ForeignKey::create()
-                            .from("interactions_events", "queue_id")
-                            .to("queues", "id")
-                            .on_delete(ForeignKeyAction::Cascade),
-                    )
-                    .foreign_key(
-                        ForeignKey::create()
-                            .from("interactions_events", "user_id")
-                            .to("users", "id")
-                            .on_delete(ForeignKeyAction::Cascade),
-                    )
-                    .foreign_key(
-                        ForeignKey::create()
-                            .from("interactions_events", "channel_id")
-                            .to("channels", "id")
-                            .on_delete(ForeignKeyAction::Cascade),
-                    )
                     .to_owned(),
             )
             .await?;
+
+        println!("creating interactions_channels_assignment");
         manager
             .create_table(
                 Table::create()
@@ -213,6 +203,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        println!("creating interactions_skills_assignment");
         manager
             .create_table(
                 Table::create()
@@ -240,6 +231,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        println!("creating queues_channels_assignment");
         manager
             .create_table(
                 Table::create()
@@ -266,6 +258,8 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+
+        println!("creating queues_groups_assignment");
         manager
             .create_table(
                 Table::create()
@@ -465,47 +459,37 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
-        let tx = manager.get_connection().begin().await?;
-        tx.execute_unprepared("INSERT INTO channels(id, name) VALUES ('0199d191-78f6-7153-8eb9-b4b926a95996', 'Voice')").await?;
-        tx.execute_unprepared("INSERT INTO queues(id, name) VALUES ('0199d191-2976-7313-9f51-85c0d31420c9','Voice Sample Queue 1')")
-            .await?;
-        tx.execute_unprepared(
-            "INSERT INTO queues(id, name) VALUES ('0199d1b1-ada5-7179-aff4-e72f75148018','Voice Sample Queue 2')")
-            .await?;
-        tx.execute_unprepared("INSERT INTO queues_channels_assignment(queue_id, channel_id) VALUES ('0199d191-2976-7313-9f51-85c0d31420c9','0199d191-78f6-7153-8eb9-b4b926a95996')")
-            .await?;
-        tx.execute_unprepared("INSERT INTO queues_channels_assignment(queue_id, channel_id) VALUES ('0199d1b1-ada5-7179-aff4-e72f75148018','0199d191-78f6-7153-8eb9-b4b926a95996')")
-        .await?;
-        tx.execute_unprepared(
-            "INSERT INTO users(id, username, name, nkey_seed, nkey_pub,service_account) VALUES ('0199d920-fe4f-782d-aa86-7df58ebb87f5','core_engine_svc','core engine service account','SUAINSF3V32D5P6TLUQCFCFONRPRM5EDVISYZVTTU75WUHWL4FWBL7YDNE', 'UDMF5NAGRQGFFCZOG6RDLJUTKIOBIPAGK3MCSJVJALXTXLINUVUCPX2N', true)")
-            .await?;
-        tx.execute_unprepared(
-            "INSERT INTO users(id, username,name, nkey_seed, nkey_pub) VALUES ('0199d2ad-4cb9-7298-9b7a-adc9178518a8', 'agent1', 'Sample Agent 1','SUAHMSVN6476ELYZUOSKWK3LSTJ72MCXGDZZVQQXKOO7574F4OMPVEY53E', 'UA6ANCGHBXK2N4QOVYUGULXQXFTOPF2YALZTHTFFTF75APFRRS7VQE5P')")
-            .await?;
-        tx.execute_unprepared(
-            "INSERT INTO users(id, username, name, nkey_seed, nkey_pub) VALUES ('0199d2ad-8910-7a98-9ba2-b2e322ace221', 'agent2', 'Sample Agent 2', 'SUAFI5WBZRLICZAMTGGEJRBKDMDPPYMWMO3X4M7FMYYCF6UYVXH32B5M3A' ,'UCE2MASNKCKCVFTRPPGZR5AOWQJ6J45MLH7QKNYWKAXR6NYDG35IMBDD')")
-            .await?;
 
+        println!("inserting user states");
+        let mut offline_uuid: Option<Uuid> = None;
         for state in UserStates::VARIANTS.into_iter() {
             let state_id = Uuid::now_v7();
             let state_name = state.to_string();
-            tx.execute_unprepared(
-                format!(
-                    "INSERT INTO user_states (id, name, system_state) VALUES ('{}','{}',true)",
-                    state_id, state_name
+            if state.to_string() == "Offline" {
+                offline_uuid = Some(state_id);
+            }
+            manager
+                .get_connection()
+                .execute_unprepared(
+                    format!(
+                        "INSERT INTO user_states (id, name, system_state) VALUES ('{}','{}',true)",
+                        state_id, state_name
+                    )
+                    .as_str(),
                 )
-                .as_str(),
-            )
-            .await?;
+                .await?;
         }
 
-        tx.execute_unprepared(CREATE_USER_STATES_MATERIALIZED_VIEW)
+        manager
+            .get_connection()
+            .execute_unprepared(CREATE_USER_STATES_MATERIALIZED_VIEW)
             .await?;
 
+        println!("inserting interaction states");
         for state in InteractionStates::VARIANTS.into_iter() {
             let state_id = Uuid::now_v7();
             let state_name = state.to_string();
-            tx.execute_unprepared(
+            manager.get_connection().execute_unprepared(
                 format!(
                     "INSERT INTO interaction_states (id, name, system_state) VALUES ('{}','{}',true)",
                     state_id, state_name
@@ -514,7 +498,32 @@ impl MigrationTrait for Migration {
             )
             .await?;
         }
-        tx.commit().await?;
+
+        println!("inserting channels");
+        manager.get_connection().execute_unprepared("INSERT INTO channels(id, name) VALUES ('0199d191-78f6-7153-8eb9-b4b926a95996', 'Voice')").await?;
+        manager.get_connection().execute_unprepared("INSERT INTO queues(id, name) VALUES ('0199d191-2976-7313-9f51-85c0d31420c9','Voice Sample Queue 1')")
+            .await?;
+        manager.get_connection().execute_unprepared(
+            "INSERT INTO queues(id, name) VALUES ('0199d1b1-ada5-7179-aff4-e72f75148018','Voice Sample Queue 2')")
+            .await?;
+        manager.get_connection().execute_unprepared("INSERT INTO queues_channels_assignment(queue_id, channel_id) VALUES ('0199d191-2976-7313-9f51-85c0d31420c9','0199d191-78f6-7153-8eb9-b4b926a95996')")
+            .await?;
+        manager.get_connection().execute_unprepared("INSERT INTO queues_channels_assignment(queue_id, channel_id) VALUES ('0199d1b1-ada5-7179-aff4-e72f75148018','0199d191-78f6-7153-8eb9-b4b926a95996')")
+        .await?;
+
+        println!("inserting users");
+        if offline_uuid.is_some() {
+            manager.get_connection().execute_unprepared(
+            format!(r#"INSERT INTO users(id, username, name, nkey_seed, nkey_pub,service_account, state) 
+            VALUES ('{}','core_engine_svc','core engine service account','SUAINSF3V32D5P6TLUQCFCFONRPRM5EDVISYZVTTU75WUHWL4FWBL7YDNE', 'UDMF5NAGRQGFFCZOG6RDLJUTKIOBIPAGK3MCSJVJALXTXLINUVUCPX2N', true, '{}')"#,Uuid::now_v7(), offline_uuid.unwrap()).as_str())
+            .await?;
+
+            manager.get_connection().execute_unprepared(
+                format!(  r#"INSERT INTO users(id, username,name, nkey_seed, nkey_pub, state) 
+            VALUES ('{}', 'agent1', 'Sample Agent 1','SUAHMSVN6476ELYZUOSKWK3LSTJ72MCXGDZZVQQXKOO7574F4OMPVEY53E', 'UA6ANCGHBXK2N4QOVYUGULXQXFTOPF2YALZTHTFFTF75APFRRS7VQE5P', '{}')"#,Uuid::now_v7(),offline_uuid.unwrap()).as_str())
+            .await?;
+        }
+
         Ok(())
     }
 

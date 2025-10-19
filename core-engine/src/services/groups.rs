@@ -8,7 +8,7 @@ pub async fn create<B>(request: Request<'_, Group, B>) -> Result<Group, IcError>
 where
     B: ConnectionTrait + TransactionTrait,
 {
-    let Request { db, data } = request;
+    let Request { id, db, data } = request;
     let data = data.unwrap();
     let group = GroupsAM {
         id: Set(Uuid::now_v7()),

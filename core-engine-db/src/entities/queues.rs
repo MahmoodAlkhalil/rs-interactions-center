@@ -15,8 +15,6 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::interactions_events::Entity")]
-    InteractionsEvents,
     #[sea_orm(has_many = "super::queues_channels_assignment::Entity")]
     QueuesChannelsAssignment,
     #[sea_orm(has_many = "super::queues_groups_assignment::Entity")]
@@ -27,12 +25,6 @@ pub enum Relation {
     RuntimeUsersQueues,
     #[sea_orm(has_many = "super::users_queues_assignment::Entity")]
     UsersQueuesAssignment,
-}
-
-impl Related<super::interactions_events::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::InteractionsEvents.def()
-    }
 }
 
 impl Related<super::queues_channels_assignment::Entity> for Entity {
