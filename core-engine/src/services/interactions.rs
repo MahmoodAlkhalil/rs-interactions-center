@@ -14,26 +14,27 @@ use sea_orm::{
 };
 use strum::{EnumProperty, VariantArray};
 use tokio::time::Instant;
+use tower::util::error::optional::None;
 use tracing::info;
 use uuid::Uuid;
 
 use crate::utils::local_caches::{INTERACTION_STATE_TO_UUID, UUID_TO_INTERACTION_STATE};
-pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<Interaction>, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let interactions = InteractionsEntity::find().all(request.db).await?;
+pub async fn get_all(request: Request<()>) -> Result<Vec<Interaction>, IcError> {
+    let interactions = InteractionsEntity::find()
+        .all(&request.shared_state.db_pool)
+        .await?;
     let response: Vec<Interaction> = interactions.into_iter().map(|i| i.into()).collect();
     Ok(response)
 }
 
-pub async fn create<B>(request: Request<'_, Interaction, B>) -> Result<Interaction, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let Request { id, db, data } = request;
+pub async fn create(request: Request<Interaction>) -> Result<Interaction, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
     let data = data.unwrap();
-    let tx = db.begin().await?;
+    let tx = shared_state.db_pool.begin().await?;
     ChannelEntity::find_by_id(data.channel.unwrap().id.unwrap())
         .one(&tx)
         .await?

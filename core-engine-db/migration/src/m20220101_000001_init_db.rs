@@ -92,6 +92,7 @@ impl MigrationTrait for Migration {
                     .table("interactions")
                     .col(pk_uuid("id"))
                     .col(uuid("state"))
+                    .col(uuid("channel"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .index(Index::create().col("id").unique())
                     .to_owned(),

@@ -4,35 +4,42 @@ use core_engine_dto::{Group, Request, errors::IcError};
 use sea_orm::{ConnectionTrait, EntityTrait, Set, TransactionTrait};
 use uuid::Uuid;
 
-pub async fn create<B>(request: Request<'_, Group, B>) -> Result<Group, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let Request { id, db, data } = request;
+pub async fn create(request: Request<Group>) -> Result<Group, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
     let data = data.unwrap();
     let group = GroupsAM {
         id: Set(Uuid::now_v7()),
         name: Set(data.name.unwrap()),
         ..Default::default()
     };
-    let group = GroupsE::insert(group).exec_with_returning(db).await?;
+    let group = GroupsE::insert(group)
+        .exec_with_returning(&shared_state.db_pool)
+        .await?;
     Ok(group.into())
 }
 
-pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<Group>, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let groups = GroupsE::find().all(request.db).await?;
+pub async fn get_all(request: Request<()>) -> Result<Vec<Group>, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
+    let groups = GroupsE::find().all(&shared_state.db_pool).await?;
     Ok(groups.into_iter().map(|c| c.into()).collect())
 }
 
-pub async fn get_by_id<B>(request: Request<'_, Uuid, B>) -> Result<Group, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
+pub async fn get_by_id(request: Request<Uuid>) -> Result<Group, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
     let group = GroupsE::find_by_id(request.data.unwrap())
-        .one(request.db)
+        .one(&shared_state.db_pool)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,

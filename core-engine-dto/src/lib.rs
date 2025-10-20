@@ -2,11 +2,31 @@ pub mod conversion;
 pub mod errors;
 pub mod nats;
 
+use std::sync::Arc;
+
 use axum::http::StatusCode;
 use chrono::{DateTime, Utc};
 use sea_orm::{ConnectionTrait, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use async_nats::Client;
+use sea_orm::DatabaseConnection;
+
+#[derive(Debug)]
+pub struct SharedState {
+    pub db_pool: DatabaseConnection,
+    pub nats_client: Client,
+}
+
+impl SharedState {
+    pub fn new(db_pool: DatabaseConnection, nats_client: Client) -> Self {
+        SharedState {
+            db_pool,
+            nats_client,
+        }
+    }
+}
 
 pub struct EmptyResponse;
 
@@ -74,21 +94,19 @@ pub struct UserState {
 }
 
 #[derive(Debug)]
-pub struct Request<'a, A, B>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
+pub struct Request<T> {
     pub id: Uuid,
-    pub data: Option<A>,
-    pub db: &'a B,
+    pub data: Option<T>,
+    pub shared_state: Arc<SharedState>,
 }
 
-impl<'a, A, B> Request<'a, A, B>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    pub fn new(id: Uuid, data: Option<A>, db: &'a B) -> Self {
-        Self { id, data, db }
+impl<T> Request<T> {
+    pub fn new(id: Uuid, data: Option<T>, shared_state: Arc<SharedState>) -> Self {
+        Self {
+            id,
+            data,
+            shared_state,
+        }
     }
 }
 
@@ -115,6 +133,7 @@ pub enum ChannelMessageType {
     New,
     Update,
     Delete,
+    NotSpecified,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -123,9 +142,22 @@ pub enum ChannelMessageTarget {
     Queue,
     Channel,
     User,
+    NotSpecified,
 }
 
-#[derive(Serialize, Deserialize)]
+impl Default for ChannelMessageType {
+    fn default() -> Self {
+        ChannelMessageType::NotSpecified
+    }
+}
+
+impl Default for ChannelMessageTarget {
+    fn default() -> Self {
+        ChannelMessageTarget::NotSpecified
+    }
+}
+
+#[derive(Serialize, Deserialize, Default)]
 pub struct ChannelMessage {
     pub id: Uuid,
     pub r#type: ChannelMessageType,

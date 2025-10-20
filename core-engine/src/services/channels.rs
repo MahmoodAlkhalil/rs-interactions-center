@@ -6,21 +6,25 @@ use sea_orm::{ActiveModelBehavior, ConnectionTrait, EntityTrait, Set, Transactio
 use tower::util::error::optional::None;
 use uuid::Uuid;
 
-pub async fn get_all<B>(request: Request<'_, None, B>) -> Result<Vec<Channel>, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let channels = ChannelsE::find().all(request.db).await?;
+pub async fn get_all(request: Request<()>) -> Result<Vec<Channel>, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
+    let channels = ChannelsE::find().all(&shared_state.db_pool).await?;
     let response: Vec<Channel> = channels.into_iter().map(|c| c.into()).collect();
     Ok(response)
 }
 
-pub async fn get_by_id<B>(request: Request<'_, Uuid, B>) -> Result<Channel, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
+pub async fn get_by_id(request: Request<Uuid>) -> Result<Channel, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
     let channel = ChannelsE::find_by_id(request.data.unwrap())
-        .one(request.db)
+        .one(&shared_state.db_pool)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,
@@ -29,15 +33,18 @@ where
     Ok(channel.into())
 }
 
-pub async fn create<B>(request: Request<'_, Channel, B>) -> Result<Channel, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let Request { id, db, data } = request;
+pub async fn create(request: Request<Channel>) -> Result<Channel, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
     let data = data.unwrap();
     let mut channel = ChannelsAM::new();
     channel.id = Set(Uuid::now_v7());
     channel.name = Set(data.name.unwrap());
-    let channel = ChannelsE::insert(channel).exec_with_returning(db).await?;
+    let channel = ChannelsE::insert(channel)
+        .exec_with_returning(&shared_state.db_pool)
+        .await?;
     Ok(channel.into())
 }

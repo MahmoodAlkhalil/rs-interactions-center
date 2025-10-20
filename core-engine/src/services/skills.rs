@@ -6,25 +6,29 @@ use sea_orm::{
 };
 use uuid::Uuid;
 
-pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<Skill>, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
+pub async fn get_all(request: Request<()>) -> Result<Vec<Skill>, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
     let skills = Entity::find()
         .filter(Column::ParentId.is_null())
-        .all(request.db)
+        .all(&shared_state.db_pool)
         .await?;
     let skills = skills.into_iter().map(|i| i.into()).collect();
     Ok(skills)
 }
 
-pub async fn create<B>(request: Request<'_, Skill, B>) -> Result<Skill, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
+pub async fn create(request: Request<Skill>) -> Result<Skill, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
     let mut skill = ActiveModel::new();
     skill.id = Set(Uuid::now_v7());
-    skill.name = Set(request.data.unwrap().name.unwrap());
-    let skill = skill.insert(request.db).await?;
+    skill.name = Set(data.unwrap().name.unwrap());
+    let skill = skill.insert(&shared_state.db_pool).await?;
     Ok(skill.into())
 }

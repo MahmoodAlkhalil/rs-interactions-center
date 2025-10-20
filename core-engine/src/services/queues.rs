@@ -17,39 +17,47 @@ use core_engine_db::entities::runtime_interactions_queues::{
 };
 use core_engine_db::links::queues::QueuesToChannels;
 use core_engine_db::{cluster_locks::tx_lock, entities::channels};
-use core_engine_dto::{Interaction, Queue, Request, errors::IcError};
-use std::str::FromStr;
+use core_engine_dto::{
+    ChannelMessage, ChannelMessageTarget, ChannelMessageType, Interaction, Queue, Request,
+    errors::IcError,
+};
+use std::{
+    io::Read,
+    str::{Bytes, FromStr},
+    thread::spawn,
+};
 
 use sea_orm::{ConnectionTrait, IntoActiveModel, Set, TransactionTrait};
 use sea_orm::{TransactionSession, prelude::*};
 use strum::EnumProperty;
 use tower::util::error::optional::None;
 
-use crate::utils::{
-    conversions::{interaction_state_to_uuid, uuid_to_interaction_state},
-    validators::validate_interaction_state_change,
+use crate::{
+    processes::queues::notify_channel_enqueued_interaction,
+    utils::{
+        conversions::{interaction_state_to_uuid, uuid_to_interaction_state},
+        validators::validate_interaction_state_change,
+    },
 };
 
-pub async fn get_all<B>(request: Request<'_, None, B>) -> Result<Vec<Queue>, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
+pub async fn get_all(request: Request<None>) -> Result<Vec<Queue>, IcError> {
     let queues = QueuesE::find()
         .find_with_linked(QueuesToChannels)
-        .all(request.db)
+        .all(&request.shared_state.db_pool)
         .await?;
     Ok(queues.into_iter().map(|q| q.into()).collect())
 }
 
-pub async fn create<B>(request: Request<'_, Queue, B>) -> Result<Queue, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let Request { id, data, db } = request;
+pub async fn create(request: Request<Queue>) -> Result<Queue, IcError> {
+    let Request {
+        id,
+        data,
+        shared_state,
+    } = request;
     let data = data.unwrap();
     let name = data.name.unwrap();
     let channels = data.channels;
-    let tx = db.begin().await?;
+    let tx = shared_state.db_pool.begin().await?;
     let queue = QueuesAM {
         id: Set(Uuid::now_v7()),
         name: Set(name),
@@ -88,18 +96,19 @@ where
     Ok(queue_with_assignment.remove(0).into())
 }
 
-pub async fn replace_queues_channels_assignments<B>(
-    request: Request<'_, Queue, B>,
-) -> Result<Queue, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let Request { id, data, db } = request;
+pub async fn replace_queues_channels_assignments(
+    request: Request<Queue>,
+) -> Result<Queue, IcError> {
+    let Request {
+        id,
+        data,
+        shared_state,
+    } = request;
     let data = data.unwrap();
     let queue_id = data.id.unwrap();
     let channels = data.channels.unwrap();
     let channels_len = channels.len().clone();
-    let tx = db.begin().await?;
+    let tx = shared_state.db_pool.begin().await?;
     let queue = QueuesE::find_by_id(queue_id)
         .one(&tx)
         .await?
@@ -119,7 +128,7 @@ where
     }
     QueuesChannelsAssignmentE::delete_many()
         .filter(QueuesChannelsAssignmentC::QueueId.eq(queue_id))
-        .exec(request.db)
+        .exec(&tx)
         .await?;
     QueuesChannelsAssignmentE::insert_many(db_channels.into_iter().map(|db_channel| {
         QueuesChannelsAssignmentAM {
@@ -138,18 +147,17 @@ where
     Ok(queue_with_assignment.remove(0).into())
 }
 
-pub async fn enqueue_interaction<B>(
-    request: Request<'_, Interaction, B>,
-) -> Result<Interaction, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let Request { id, db, data } = request;
+pub async fn enqueue_interaction(request: Request<Interaction>) -> Result<Interaction, IcError> {
+    let Request {
+        id,
+        data,
+        shared_state,
+    } = request;
     let data = data.unwrap();
     let interaction_id = data.id.unwrap();
     let queue_id = data.queue.unwrap().id.unwrap();
     let priority = data.priority.unwrap_or(DEFAULT_QUEUE_PRIORITY);
-    let tx = db.begin().await?;
+    let tx = shared_state.db_pool.begin().await?;
     tx_lock(interaction_id, &tx).await?;
     tx_lock(queue_id, &tx).await?;
     let queue = QueuesE::find_by_id(queue_id)
@@ -160,13 +168,18 @@ where
             message: "queue not found".to_string(),
         })?;
     let interaction = InteractionsE::find_by_id(interaction_id)
-        .one(request.db)
+        .find_also_related(ChannelsE)
+        .one(&tx)
         .await?
         .ok_or(IcError {
             status_code: StatusCode::BAD_REQUEST,
             message: "interaction not found".to_string(),
         })?;
-
+    let (interaction, channel) = interaction;
+    let channel = channel.ok_or(IcError {
+        status_code: StatusCode::INTERNAL_SERVER_ERROR,
+        message: "interaction is not mapped to a channel, check logs".to_string(),
+    })?;
     validate_interaction_state_change(
         uuid_to_interaction_state(&interaction.state).await?,
         InteractionStates::Enqueued,
@@ -195,20 +208,31 @@ where
     let mut interaction = interaction.into_active_model();
     interaction.state = Set(interaction_state_to_uuid(InteractionStates::Enqueued).await?);
     let interaction = InteractionsE::update(interaction).exec(&tx).await?;
+
+    let nats_interaction: Interaction = interaction.clone().into();
+    let nats_payload = serde_json::to_string(&ChannelMessage {
+        id,
+        r#type: ChannelMessageType::Update,
+        target: ChannelMessageTarget::Interaction,
+        interaction: Some(nats_interaction),
+        ..Default::default()
+    })
+    .unwrap();
+    spawn(|| notify_channel_enqueued_interaction(shared_state, channel, nats_payload));
+
     tx.commit().await?;
     Ok(interaction.into())
 }
 
-pub async fn dequeue_interaction<B>(
-    request: Request<'_, Interaction, B>,
-) -> Result<Interaction, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let Request { db, data, id } = request;
+pub async fn dequeue_interaction(request: Request<Interaction>) -> Result<Interaction, IcError> {
+    let Request {
+        id,
+        shared_state,
+        data,
+    } = request;
     let data = data.unwrap();
     let interaction_id = data.id.unwrap();
-    let tx = db.begin().await?;
+    let tx = shared_state.db_pool.begin().await?;
     tx_lock(interaction_id, &tx).await?;
     let enqueued_interaction = RuntimeInteractionsQueuesE::find()
         .filter(RuntimeInteractionsQueuesC::InteractionId.eq(interaction_id))

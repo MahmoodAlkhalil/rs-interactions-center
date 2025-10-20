@@ -10,24 +10,24 @@ use sea_orm::{ConnectionTrait, Set, TransactionTrait};
 use tokio::task;
 use tracing::error;
 
-pub async fn get_all<B>(request: Request<'_, (), B>) -> Result<Vec<User>, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let users = UsersEntity::find().all(request.db).await?;
+pub async fn get_all(request: Request<()>) -> Result<Vec<User>, IcError> {
+    let users = UsersEntity::find()
+        .all(&request.shared_state.db_pool)
+        .await?;
     let users: Vec<User> = users.into_iter().map(|e| e.into()).collect();
     Ok(users)
 }
 
-pub async fn create<B>(request: Request<'_, User, B>) -> Result<User, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let Request { db, data, id } = request;
+pub async fn create(request: Request<User>) -> Result<User, IcError> {
+    let Request {
+        data,
+        shared_state,
+        id,
+    } = request;
     let data = data.unwrap();
     let name = data.name.unwrap();
     let username = data.username.unwrap();
-    let tx = db.begin().await?;
+    let tx = shared_state.db_pool.begin().await?;
     let nats_key_pairs = NatsServices::generate_nkeys()?;
     let mut user = UsersActiveModel::new();
     let user_id = Uuid::now_v7();
@@ -61,10 +61,9 @@ where
     Ok(user.into())
 }
 
-pub async fn get_all_states<B>(request: Request<'_, (), B>) -> Result<Vec<UserState>, IcError>
-where
-    B: ConnectionTrait + TransactionTrait,
-{
-    let states = UserStatesTreeE::find().all(request.db).await?;
+pub async fn get_all_states(request: Request<()>) -> Result<Vec<UserState>, IcError> {
+    let states = UserStatesTreeE::find()
+        .all(&request.shared_state.db_pool)
+        .await?;
     Ok(states.into_iter().map(|state| state.into()).collect())
 }
