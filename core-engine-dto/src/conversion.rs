@@ -1,6 +1,6 @@
 use crate::{
-    ApiResponse, Channel, Group, Interaction, Queue, Request, Skill, User, UserState,
-    errors::IcError,
+    ApiResponse, Channel, ChannelWorker, Group, Interaction, Queue, Request, Skill, User,
+    UserState, errors::IcError,
 };
 use axum::{
     Json,
@@ -9,6 +9,7 @@ use axum::{
 };
 use core_engine_const::interaction_states::InteractionStates;
 use core_engine_db::entities::channels::Model as ChannelsM;
+use core_engine_db::entities::channels_workers::Model as ChannelsWorkersM;
 use core_engine_db::entities::groups::Model as GroupsM;
 use core_engine_db::entities::queues::Model as QueuesM;
 use core_engine_db::entities::skills::Model as SkillsM;
@@ -138,9 +139,20 @@ impl From<UserStatesTreeM> for UserState {
     }
 }
 
-
-pub trait IntoApiResponse<T> {
-    fn into_api_response(self) -> ApiResponse<T>;
+impl From<ChannelsWorkersM> for ChannelWorker {
+    fn from(value: ChannelsWorkersM) -> Self {
+        ChannelWorker {
+            id: Some(value.id),
+            state: Some(value.state),
+            channel: Some(Channel {
+                id: Some(value.channel_id),
+                ..Default::default()
+            }),
+            created_at: Some(value.created_at.to_utc()),
+            update_at: Some(value.update_at.to_utc()),
+            disable: Some(value.disable),
+        }
+    }
 }
 
 impl IntoResponse for IcError {
@@ -151,15 +163,8 @@ impl IntoResponse for IcError {
     }
 }
 
-impl<T> IntoResponse for ApiResponse<T>
-where
-    T: Serialize,
-{
-    fn into_response(self) -> Response {
-        let status = self.code;
-        let body = Json(self.data.unwrap());
-        (status, body).into_response()
-    }
+pub trait IntoApiResponse<T> {
+    fn into_api_response(self) -> ApiResponse<T>;
 }
 
 impl<T> IntoApiResponse<T> for Result<T, IcError>
@@ -179,5 +184,16 @@ where
                 data: None,
             },
         }
+    }
+}
+
+impl<T> IntoResponse for ApiResponse<T>
+where
+    T: Serialize,
+{
+    fn into_response(self) -> Response {
+        let status = self.code;
+        let body: Json<Option<T>> = Json(self.data);
+        (status, body).into_response()
     }
 }

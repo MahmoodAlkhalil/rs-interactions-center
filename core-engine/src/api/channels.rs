@@ -4,7 +4,9 @@ use crate::utils::axum::RequestId;
 use axum::extract::{Path, State};
 use axum::routing::{get, post};
 use axum::{Json, Router, debug_handler};
-use core_engine_dto::{ApiResponse, Channel, Request, SharedState, conversion::IntoApiResponse};
+use core_engine_dto::{
+    ApiResponse, Channel, ChannelWorker, Request, SharedState, conversion::IntoApiResponse,
+};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -13,6 +15,7 @@ pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
         .route("/channels", get(get_all))
         .route("/channels/{id}", get(get_by_id))
         .route("/channels", post(create))
+        .route("/channels/{id}/workers", post(register_channel_worker))
         .with_state(api_shared_data)
 }
 #[debug_handler]
@@ -42,4 +45,23 @@ async fn create(
 ) -> ApiResponse<Channel> {
     let dto = Request::new(request_id, Some(request), Arc::clone(&state));
     ChannelsService::create(dto).await.into_api_response()
+}
+
+#[debug_handler]
+async fn register_channel_worker(
+    state: State<Arc<SharedState>>,
+    RequestId(request_id): RequestId,
+    Path(id): Path<Uuid>,
+) -> ApiResponse<ChannelWorker> {
+    let request = ChannelWorker {
+        channel: Some(Channel {
+            id: Some(id),
+            ..Default::default()
+        }),
+        ..Default::default()
+    };
+    let dto = Request::new(request_id, Some(request), Arc::clone(&state));
+    ChannelsService::register_channel_worker(dto)
+        .await
+        .into_api_response()
 }

@@ -9,6 +9,7 @@ pub struct Model {
     pub id: Uuid,
     pub state: Uuid,
     pub channel: Uuid,
+    pub channel_worker: Uuid,
     pub created_at: DateTimeWithTimeZone,
 }
 

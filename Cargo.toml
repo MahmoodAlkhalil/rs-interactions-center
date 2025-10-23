@@ -46,5 +46,7 @@ async-nats = { version = "0.44.2" }
 hcl-rs = { version = "0.19.4" }
 strum = "0.27.2"
 strum_macros = "0.27.2"
-
+nanoid = "0.4.0"
 reqwest = "0.12.24"
+nkeys = "0.4.5"
+sled = "0.34.7"

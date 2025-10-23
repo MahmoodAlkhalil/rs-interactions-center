@@ -43,7 +43,18 @@ pub struct Queue {
 pub struct Channel {
     pub id: Option<Uuid>,
     pub name: Option<String>,
+    pub workers: Option<Vec<ChannelWorker>>,
     pub created_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Serialize, Deserialize, Default, Debug)]
+pub struct ChannelWorker {
+    pub id: Option<String>,
+    pub state: Option<String>,
+    pub channel: Option<Channel>,
+    pub created_at: Option<DateTime<Utc>>,
+    pub update_at: Option<DateTime<Utc>>,
+    pub disable: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -61,6 +72,7 @@ pub struct Interaction {
     pub queue: Option<Queue>,
     pub priority: Option<i32>,
     pub channel: Option<Channel>,
+    pub channel_worker: Option<Uuid>,
     pub created_at: Option<DateTime<Utc>>,
 }
 

@@ -1,9 +1,9 @@
 use core_engine_const::interaction_states::InteractionStates;
 use core_engine_const::user_states::UserStates;
-use sea_orm::DatabaseBackend::Postgres;
+use sea_orm::{DatabaseBackend::Postgres, PrimaryKeyToColumn};
 use sea_orm::{EntityTrait, Set, TransactionTrait};
 use sea_orm::{ExecResult, Statement};
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::{prelude::*, schema::*, seaql_migrations::PrimaryKey};
 use strum::{EnumProperty, VariantArray};
 use tracing::info;
 use uuid::{Uuid, uuid};
@@ -14,6 +14,19 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        println!("creating system_params");
+        manager
+            .create_table(
+                Table::create()
+                    .table("system_params")
+                    .if_not_exists()
+                    .col(big_pk_auto("id"))
+                    .col(text_uniq("key"))
+                    .col(text("val"))
+                    .index(Index::create().col("id").unique())
+                    .to_owned(),
+            )
+            .await?;
         println!("creating interaction_states");
         manager
             .create_table(
@@ -70,6 +83,28 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        println!("creating channels workers");
+        manager
+            .create_table(
+                Table::create()
+                    .table("channels_workers")
+                    .col(char_len("id", 10).primary_key())
+                    .col(text("state"))
+                    .col(uuid("channel_id"))
+                    .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
+                    .col(timestamp_with_time_zone("update_at").default(Expr::current_timestamp()))
+                    .col(boolean("disable").default(false))
+                    .index(Index::create().col("id").unique())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from("channels_workers", "channel_id")
+                            .to("channels", "id")
+                            .on_delete(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
         println!("creating groups");
         manager
             .create_table(
@@ -93,6 +128,7 @@ impl MigrationTrait for Migration {
                     .col(pk_uuid("id"))
                     .col(uuid("state"))
                     .col(uuid("channel"))
+                    .col(uuid("channel_worker"))
                     .col(timestamp_with_time_zone("created_at").default(Expr::current_timestamp()))
                     .index(Index::create().col("id").unique())
                     .to_owned(),
@@ -649,6 +685,14 @@ impl MigrationTrait for Migration {
             .await?;
         manager
             .drop_table(Table::drop().table("groups").if_exists().to_owned())
+            .await?;
+        manager
+            .drop_table(
+                Table::drop()
+                    .table("channels_workers")
+                    .if_exists()
+                    .to_owned(),
+            )
             .await?;
         manager
             .drop_table(Table::drop().table("channels").if_exists().to_owned())

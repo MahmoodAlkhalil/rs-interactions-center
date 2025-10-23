@@ -3,6 +3,7 @@
 pub mod prelude;
 
 pub mod channels;
+pub mod channels_workers;
 pub mod groups;
 pub mod interaction_states;
 pub mod interactions;
@@ -17,6 +18,7 @@ pub mod runtime_users;
 pub mod runtime_users_queues;
 pub mod skills;
 pub mod skills_groups_assignment;
+pub mod system_params;
 pub mod user_states;
 pub mod users;
 pub mod users_groups_assignment;

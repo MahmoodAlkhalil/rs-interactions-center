@@ -28,19 +28,19 @@ pub async fn create(request: Request<User>) -> Result<User, IcError> {
     let name = data.name.unwrap();
     let username = data.username.unwrap();
     let tx = shared_state.db_pool.begin().await?;
-    let nats_key_pairs = NatsServices::generate_nkeys()?;
+    let nats_key_pairs = nkeys::KeyPair::new_user();
     let mut user = UsersActiveModel::new();
     let user_id = Uuid::now_v7();
     user.id = Set(user_id);
     user.username = Set(username);
     user.name = Set(name);
-    user.nkey_seed = Set(nats_key_pairs.seed);
-    user.nkey_pub = Set(nats_key_pairs.pub_key.clone());
+    user.nkey_seed = Set(nats_key_pairs.seed()?);
+    user.nkey_pub = Set(nats_key_pairs.public_key());
     let user = user.insert(&tx).await?;
     let join_handle = task::spawn_blocking(move || {
         NatsServices::append_to_users_conf(
             user_id.to_string().as_str(),
-            &nats_key_pairs.pub_key.as_str(),
+            &nats_key_pairs.public_key().as_str(),
         )
         .unwrap();
     });
