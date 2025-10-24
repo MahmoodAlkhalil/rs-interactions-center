@@ -3,12 +3,6 @@ use std::vec;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct KeyPair {
-    pub seed: String,
-    pub pub_key: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct NatsUsersConfig {
     pub authorization: Authorization,
 }

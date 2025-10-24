@@ -6,6 +6,7 @@ use std::sync::Arc;
 
 use axum::http::StatusCode;
 use chrono::{DateTime, Utc};
+use core_engine_const::channel_worker_states::ChannelWorkerStates;
 use sea_orm::{ConnectionTrait, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -178,4 +179,11 @@ pub struct ChannelMessage {
     pub queue: Option<Queue>,
     pub channel: Option<Channel>,
     pub user: Option<User>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ChannelHeartbeatMessage {
+    pub worker_id: String,
+    pub state: ChannelWorkerStates,
+    pub worker_timestamp: DateTime<Utc>,
 }

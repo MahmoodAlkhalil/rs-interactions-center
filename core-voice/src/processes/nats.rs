@@ -19,18 +19,3 @@ pub async fn init_nats_client() -> Result<(), IcError> {
     NATS_CLIENT.set(nats_client)?;
     Ok(())
 }
-
-pub async fn register_sink_on_topic(topic_name: String) -> Result<(), IcError> {
-    if !NATS_CLIENT.initialized() {
-        return Err(IcError {
-            status_code: StatusCode::BAD_REQUEST,
-            message: "NATS Client is NOT initialized".to_owned(),
-        });
-    }
-    NATS_CLIENT.get().unwrap().subscribe(topic_name);
-    Ok(())
-}
-
-pub async fn health_heartbeater(worker_id: String) {}
-
-async fn health_heartbeater() {}

@@ -1,7 +1,7 @@
 use axum::http::StatusCode;
 use core_engine_dto::{
     errors::IcError,
-    nats::{KeyPair, NatsUsersConfig, Permissions, User},
+    nats::{NatsUsersConfig, Permissions, User},
 };
 use std::process::Command;
 use std::vec;

@@ -541,6 +541,7 @@ dependencies = [
 name = "core-engine-const"
 version = "0.0.1"
 dependencies = [
+ "serde",
  "strum",
  "strum_macros",
  "uuid",
