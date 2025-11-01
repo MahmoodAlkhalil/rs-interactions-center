@@ -9,5 +9,4 @@ tracing = { workspace = true }
 core-engine-const = { workspace = true }
 strum = { workspace = true }
 sea-orm = { workspace = true }
-sea-orm-migration = { workspace = true }
 tokio = { workspace = true }

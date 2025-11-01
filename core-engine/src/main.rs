@@ -1,9 +1,13 @@
-use crate::utils::axum::RequestIdLayer;
-use async_nats::Client;
+use crate::{
+    services::nats,
+    utils::axum::{RequestIdLayer, SharedState},
+};
+use async_nats::{Client, jetstream::new};
 use axum::Router;
-use core_engine_dto::{SharedState, errors::IcError};
+use axum_jwks::Jwks;
+use core_engine_dto::errors::ApiError;
 use futures_util::SinkExt;
-use sea_orm::{ConnectOptions, Database, DatabaseConnection};
+use sea_orm::{ConnectOptions, Database, DatabaseConnection, sea_query::Oper};
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
@@ -12,9 +16,10 @@ mod api;
 mod processes;
 mod services;
 mod utils;
+use nats_io_jwt::{Account, KeyPair, Operator, Permission, SigningKeys, Token, User};
 
 #[tokio::main]
-async fn main() -> Result<(), IcError> {
+async fn main() -> Result<(), ApiError> {
     dotenv::dotenv().ok();
     //todo [make logging format an env variable]
     // tracing_subscriber::fmt()
@@ -23,15 +28,19 @@ async fn main() -> Result<(), IcError> {
     //     .with_span_list(false)
     //     .init();
     tracing_subscriber::fmt().with_max_level(Level::INFO).init();
+    let jwks = init_jwks().await?;
     let db_pool = init_database_pool().await?;
-    let nats_client = init_nats_client().await?;
+
     init_local_caches(&db_pool).await?;
-    let shared_state = Arc::new(SharedState::new(db_pool, nats_client));
-    start_http_server(Arc::clone(&shared_state)).await?;
+    nats::init_config(&db_pool).await?;
+    let nats_client = nats::create_client(&db_pool).await?;
+    let shared_state = SharedState::new(Arc::new(db_pool), Arc::new(nats_client), jwks);
+    start_http_server(shared_state.clone()).await?;
+
     Ok(())
 }
 
-async fn init_database_pool() -> Result<DatabaseConnection, IcError> {
+async fn init_database_pool() -> Result<DatabaseConnection, ApiError> {
     let mut opt = ConnectOptions::new(env::var("DATABASE_URL").unwrap().to_owned());
     opt.max_connections(50)
         .min_connections(5)
@@ -45,25 +54,19 @@ async fn init_database_pool() -> Result<DatabaseConnection, IcError> {
     Ok(pool)
 }
 
-async fn init_nats_client() -> Result<Client, IcError> {
-    let nats_url = env::var("NATS_URL").unwrap();
-    let nats_seed = env::var("NATS_SEED").unwrap();
-    let options: async_nats::ConnectOptions = async_nats::ConnectOptions::new().nkey(nats_seed);
-    let client = async_nats::connect_with_options(nats_url, options).await?;
-    Ok(client)
+async fn init_local_caches(db: &DatabaseConnection) -> Result<(), ApiError> {
+    services::interactions::init_interaction_states_local_cache(db).await?;
+    services::users::init_user_states_local_cache(db).await?;
+    Ok(())
 }
 
-async fn init_local_caches(db: &DatabaseConnection) -> Result<(), IcError> {
-    services::interactions::init_interaction_states_local_cache(db).await
-}
-
-async fn start_http_server(shared_state: Arc<SharedState>) -> Result<(), IcError> {
+async fn start_http_server(shared_state: SharedState) -> Result<(), ApiError> {
     let api_v1 = Router::new()
-        .merge(api::queues::routes(Arc::clone(&shared_state)))
-        .merge(api::channels::routes(Arc::clone(&shared_state)))
-        .merge(api::skills::routes(Arc::clone(&shared_state)))
-        .merge(api::interactions::routes(Arc::clone(&shared_state)))
-        .merge(api::users::routes(Arc::clone(&shared_state)))
+        .merge(api::queues::routes(shared_state.clone()))
+        .merge(api::channels::routes(shared_state.clone()))
+        .merge(api::skills::routes(shared_state.clone()))
+        .merge(api::interactions::routes(shared_state.clone()))
+        .merge(api::users::routes(shared_state.clone()))
         .layer(RequestIdLayer);
 
     let router = Router::new().nest("/api/v1", api_v1);
@@ -80,4 +83,13 @@ async fn start_http_server(shared_state: Arc<SharedState>) -> Result<(), IcError
         }
     };
     Ok(())
+}
+
+async fn init_jwks() -> Result<Jwks, ApiError> {
+    let jwks = Jwks::from_oidc_url(
+        "http://localhost:8081/realms/rsic/.well-known/openid-configuration",
+        None,
+    )
+    .await?;
+    Ok(jwks)
 }

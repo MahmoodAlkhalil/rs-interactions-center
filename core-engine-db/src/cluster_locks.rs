@@ -2,13 +2,25 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 
 use sea_orm::DatabaseBackend::Postgres;
 use sea_orm::{ConnectionTrait, DbErr, ExecResult, Statement, TransactionTrait};
-use tracing::trace;
+use tracing::{info, trace};
 use uuid::Uuid;
 
-fn hasher(id: Uuid) -> u64 {
+fn hasher(id: Uuid) -> i64 {
     let mut hasher = DefaultHasher::new();
     id.hash(&mut hasher);
-    hasher.finish()
+    hasher.finish() as i64
+}
+
+pub async fn tx_lock_i64<B>(id: i64, db: &B) -> Result<ExecResult, DbErr>
+where
+    B: TransactionTrait + ConnectionTrait,
+{
+    trace!("tx locking i64 [{}]", id);
+    db.execute_raw(Statement::from_string(
+        Postgres,
+        format!("SELECT pg_advisory_xact_lock('{}');", id),
+    ))
+    .await
 }
 
 pub async fn tx_lock<B>(id: Uuid, db: &B) -> Result<ExecResult, DbErr>
@@ -17,10 +29,9 @@ where
 {
     let lock_id = hasher(id);
     trace!("tx locking uuid [{}] with hash [{}]", id, lock_id);
-    db.execute_raw(Statement::from_sql_and_values(
+    db.execute_raw(Statement::from_string(
         Postgres,
-        "SELECT pg_advisory_xact_lock($1)",
-        [lock_id.into()],
+        format!("SELECT pg_advisory_xact_lock('{}');", lock_id),
     ))
     .await
 }
@@ -33,7 +44,7 @@ where
     trace!("locking uuid [{}] with hash [{}]", id, lock_id);
     db.execute_raw(Statement::from_sql_and_values(
         Postgres,
-        "SELECT pg_advisory_lock($1)",
+        "pg_advisory_lock($1)",
         [lock_id.into()],
     ))
     .await
@@ -47,7 +58,7 @@ where
     trace!("unlocking uuid [{}] with hash [{}]", id, lock_id);
     db.execute_raw(Statement::from_sql_and_values(
         Postgres,
-        "SELECT pg_advisory_unlock($1)",
+        "pg_advisory_unlock($1)",
         [lock_id.into()],
     ))
     .await

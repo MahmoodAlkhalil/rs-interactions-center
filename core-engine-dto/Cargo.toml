@@ -17,3 +17,4 @@ strum = { workspace = true }
 nkeys = { workspace = true }
 sled = { workspace = true }
 strum_macros = { workspace = true }
+axum-jwks = { workspace = true }

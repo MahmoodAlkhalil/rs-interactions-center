@@ -1,0 +1,21 @@
+meta {
+  name: Client - Generate Token
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{SSO_BASE_URL}}/realms/rsic/protocol/openid-connect/token
+  body: formUrlEncoded
+  auth: inherit
+}
+
+body:form-urlencoded {
+  grant_type: client_credentials
+  client_id: 47607c60-ddbe-4486-bfcd-03027d0be013
+  client_secret: I57kS2st9TZ9MvRF72kqJTkdWdWyuaaX
+}
+
+settings {
+  encodeUrl: true
+}

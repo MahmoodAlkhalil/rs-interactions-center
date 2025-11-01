@@ -1,7 +1,7 @@
 use async_nats::Subscriber;
 use axum::http::StatusCode;
 use core_engine_db::entities::channels::Entity as ChannelsE;
-use core_engine_dto::{ChannelHeartbeatMessage, SharedState, errors::IcError};
+use core_engine_dto::{ChannelHeartbeatMessage, errors::ApiError};
 use futures_util::StreamExt;
 use sea_orm::EntityTrait;
 use sea_orm::sqlx::postgres::PgListener;
@@ -9,10 +9,12 @@ use std::sync::Arc;
 use tokio::spawn;
 use tracing::{error, info, warn};
 
-pub async fn health_monitor(state: Arc<SharedState>) -> Result<(), IcError> {
-    let channels = ChannelsE::find().all(&state.db_pool).await?;
+use crate::utils::axum::SharedState;
+
+pub async fn health_monitor(shared_state: SharedState) -> Result<(), ApiError> {
+    let channels = ChannelsE::find().all(shared_state.db_pool.as_ref()).await?;
     for channel in channels {
-        let stream = state
+        let stream = shared_state
             .nats_client
             .subscribe(format!("{}.heartbeat", channel.name.trim()))
             .await?;
@@ -42,6 +44,5 @@ pub async fn handle_channel_heartbeat_messages(mut stream: Subscriber) {
                 continue;
             }
         };
-        
     }
 }

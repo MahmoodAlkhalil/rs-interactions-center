@@ -9,7 +9,6 @@ core-engine-const = { workspace = true }
 core-engine-db = { workspace = true }
 core-engine-dto = { workspace = true }
 sea-orm = { workspace = true }
-sea-orm-migration = { workspace = true }
 axum = { workspace = true }
 tower = { workspace = true }
 tracing = { workspace = true }
@@ -25,3 +24,5 @@ async-nats = { workspace = true }
 hcl-rs = { workspace = true }
 strum = { workspace = true }
 nkeys = { workspace = true }
+axum-jwks = { workspace = true }
+nats-io-jwt = { workspace = true }

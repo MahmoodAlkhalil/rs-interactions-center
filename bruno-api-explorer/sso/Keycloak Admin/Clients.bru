@@ -1,0 +1,15 @@
+meta {
+  name: Clients
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{SSO_BASE_URL}}/admin/realms/rsic/clients
+  body: none
+  auth: inherit
+}
+
+settings {
+  encodeUrl: true
+}

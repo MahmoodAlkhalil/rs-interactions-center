@@ -5,6 +5,7 @@ pub mod nats;
 use std::sync::Arc;
 
 use axum::http::StatusCode;
+use axum_jwks::Jwks;
 use chrono::{DateTime, Utc};
 use core_engine_const::channel_worker_states::ChannelWorkerStates;
 use sea_orm::{ConnectionTrait, TransactionTrait};
@@ -13,21 +14,6 @@ use uuid::Uuid;
 
 use async_nats::Client;
 use sea_orm::DatabaseConnection;
-
-#[derive(Debug)]
-pub struct SharedState {
-    pub db_pool: DatabaseConnection,
-    pub nats_client: Client,
-}
-
-impl SharedState {
-    pub fn new(db_pool: DatabaseConnection, nats_client: Client) -> Self {
-        SharedState {
-            db_pool,
-            nats_client,
-        }
-    }
-}
 
 pub struct EmptyResponse;
 
@@ -87,6 +73,12 @@ pub struct User {
 }
 
 #[derive(Serialize, Deserialize, Default, Debug)]
+pub struct MessagingJwt {
+    pub seed: String,
+    pub jwt: String,
+}
+
+#[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Skill {
     pub id: Option<Uuid>,
     pub name: Option<String>,
@@ -104,23 +96,6 @@ pub struct UserState {
     pub path: Option<Vec<Uuid>>,
     pub full_path: Option<String>,
     pub created_at: Option<DateTime<Utc>>,
-}
-
-#[derive(Debug)]
-pub struct Request<T> {
-    pub id: Uuid,
-    pub data: Option<T>,
-    pub shared_state: Arc<SharedState>,
-}
-
-impl<T> Request<T> {
-    pub fn new(id: Uuid, data: Option<T>, shared_state: Arc<SharedState>) -> Self {
-        Self {
-            id,
-            data,
-            shared_state,
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -186,4 +161,16 @@ pub struct ChannelHeartbeatMessage {
     pub worker_id: String,
     pub state: ChannelWorkerStates,
     pub worker_timestamp: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default)]
+pub struct KeycloakTokenResponse {
+    pub access_token: String,
+    pub expires_in: u64,
+    pub refresh_expires_in: u64,
+    pub token_type: String,
+    #[serde(rename = "not-before-policy")]
+    pub not_before_policy: u64,
+    pub scope: String,
+    pub refresh_token: Option<String>,
 }

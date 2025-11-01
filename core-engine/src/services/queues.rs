@@ -18,14 +18,14 @@ use core_engine_db::entities::runtime_interactions_queues::{
 use core_engine_db::links::queues::QueuesToChannels;
 use core_engine_db::{cluster_locks::tx_lock, entities::channels};
 use core_engine_dto::{
-    ChannelMessage, ChannelMessageTarget, ChannelMessageType, Interaction, Queue, Request,
-    errors::IcError,
+    ChannelMessage, ChannelMessageTarget, ChannelMessageType, Interaction, Queue, errors::ApiError,
 };
 use std::{
     io::Read,
     str::{Bytes, FromStr},
     thread::spawn,
 };
+use tracing::info;
 
 use sea_orm::{ConnectionTrait, IntoActiveModel, Set, TransactionTrait};
 use sea_orm::{TransactionSession, prelude::*};
@@ -35,25 +35,29 @@ use tower::util::error::optional::None;
 use crate::{
     processes::queues::notify_channel_enqueued_interaction,
     utils::{
+        axum::InnerRequest,
         conversions::{interaction_state_to_uuid, uuid_to_interaction_state},
         validators::validate_interaction_state_change,
     },
 };
 
-pub async fn get_all(request: Request<None>) -> Result<Vec<Queue>, IcError> {
+pub async fn get_all(request: InnerRequest<None>) -> Result<Vec<Queue>, ApiError> {
+    let InnerRequest { claims, .. } = request;
     let queues = QueuesE::find()
         .find_with_linked(QueuesToChannels)
-        .all(&request.shared_state.db_pool)
+        .all(request.shared_state.db_pool.as_ref())
         .await?;
     Ok(queues.into_iter().map(|q| q.into()).collect())
 }
 
-pub async fn create(request: Request<Queue>) -> Result<Queue, IcError> {
-    let Request {
-        id,
+pub async fn create(request: InnerRequest<Queue>) -> Result<Queue, ApiError> {
+    let InnerRequest {
         data,
         shared_state,
+        claims,
+        ..
     } = request;
+
     let data = data.unwrap();
     let name = data.name.unwrap();
     let channels = data.channels;
@@ -74,7 +78,7 @@ pub async fn create(request: Request<Queue>) -> Result<Queue, IcError> {
         .all(&tx)
         .await?;
     if db_channels.len() != channels_len {
-        return Err(IcError {
+        return Err(ApiError {
             status_code: StatusCode::BAD_REQUEST,
             message: "Some or all channels are not found".to_string(),
         });
@@ -97,12 +101,13 @@ pub async fn create(request: Request<Queue>) -> Result<Queue, IcError> {
 }
 
 pub async fn replace_queues_channels_assignments(
-    request: Request<Queue>,
-) -> Result<Queue, IcError> {
-    let Request {
+    request: InnerRequest<Queue>,
+) -> Result<Queue, ApiError> {
+    let InnerRequest {
         id,
         data,
         shared_state,
+        claims,
     } = request;
     let data = data.unwrap();
     let queue_id = data.id.unwrap();
@@ -112,7 +117,7 @@ pub async fn replace_queues_channels_assignments(
     let queue = QueuesE::find_by_id(queue_id)
         .one(&tx)
         .await?
-        .ok_or(IcError {
+        .ok_or(ApiError {
             status_code: StatusCode::BAD_REQUEST,
             message: "queue not found".to_string(),
         })?;
@@ -121,7 +126,7 @@ pub async fn replace_queues_channels_assignments(
         .all(&tx)
         .await?;
     if db_channels.len() != channels_len {
-        return Err(IcError {
+        return Err(ApiError {
             status_code: StatusCode::BAD_REQUEST,
             message: "some or all channels are not found".to_string(),
         });
@@ -147,11 +152,14 @@ pub async fn replace_queues_channels_assignments(
     Ok(queue_with_assignment.remove(0).into())
 }
 
-pub async fn enqueue_interaction(request: Request<Interaction>) -> Result<Interaction, IcError> {
-    let Request {
+pub async fn enqueue_interaction(
+    request: InnerRequest<Interaction>,
+) -> Result<Interaction, ApiError> {
+    let InnerRequest {
         id,
         data,
         shared_state,
+        claims,
     } = request;
     let data = data.unwrap();
     let interaction_id = data.id.unwrap();
@@ -163,7 +171,7 @@ pub async fn enqueue_interaction(request: Request<Interaction>) -> Result<Intera
     let queue = QueuesE::find_by_id(queue_id)
         .one(&tx)
         .await?
-        .ok_or(IcError {
+        .ok_or(ApiError {
             status_code: StatusCode::BAD_REQUEST,
             message: "queue not found".to_string(),
         })?;
@@ -171,12 +179,12 @@ pub async fn enqueue_interaction(request: Request<Interaction>) -> Result<Intera
         .find_also_related(ChannelsE)
         .one(&tx)
         .await?
-        .ok_or(IcError {
+        .ok_or(ApiError {
             status_code: StatusCode::BAD_REQUEST,
             message: "interaction not found".to_string(),
         })?;
     let (interaction, channel) = interaction;
-    let channel = channel.ok_or(IcError {
+    let channel = channel.ok_or(ApiError {
         status_code: StatusCode::INTERNAL_SERVER_ERROR,
         message: "interaction is not mapped to a channel, check logs".to_string(),
     })?;
@@ -224,21 +232,25 @@ pub async fn enqueue_interaction(request: Request<Interaction>) -> Result<Intera
     Ok(interaction.into())
 }
 
-pub async fn dequeue_interaction(request: Request<Interaction>) -> Result<Interaction, IcError> {
-    let Request {
+pub async fn dequeue_interaction(
+    request: InnerRequest<Interaction>,
+) -> Result<Interaction, ApiError> {
+    let InnerRequest {
         id,
         shared_state,
         data,
+        claims,
     } = request;
     let data = data.unwrap();
     let interaction_id = data.id.unwrap();
+
     let tx = shared_state.db_pool.begin().await?;
     tx_lock(interaction_id, &tx).await?;
     let enqueued_interaction = RuntimeInteractionsQueuesE::find()
         .filter(RuntimeInteractionsQueuesC::InteractionId.eq(interaction_id))
         .one(&tx)
         .await?
-        .ok_or(IcError {
+        .ok_or(ApiError {
             status_code: StatusCode::BAD_REQUEST,
             message: "Interaction is not in a queue".to_string(),
         })?;
@@ -246,7 +258,7 @@ pub async fn dequeue_interaction(request: Request<Interaction>) -> Result<Intera
     let interaction = InteractionsE::find_by_id(interaction_id)
         .one(&tx)
         .await?
-        .ok_or(IcError {
+        .ok_or(ApiError {
             status_code: StatusCode::BAD_REQUEST,
             message: "interaction not found".to_string(),
         })?;

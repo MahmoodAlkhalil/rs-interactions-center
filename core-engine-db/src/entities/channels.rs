@@ -13,7 +13,14 @@ pub struct Model {
     pub description: Option<String>,
     pub created_at: DateTimeWithTimeZone,
     pub mark_for_delete: bool,
-    pub online: bool,
+    #[sea_orm(column_type = "Text")]
+    pub nkey_seed: String,
+    #[sea_orm(column_type = "Text")]
+    pub nkey_pub: String,
+    #[sea_orm(unique)]
+    pub client_id: Uuid,
+    #[sea_orm(column_type = "Text")]
+    pub nats_jwt: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -24,6 +31,8 @@ pub enum Relation {
     InteractionsChannelsAssignment,
     #[sea_orm(has_many = "super::queues_channels_assignment::Entity")]
     QueuesChannelsAssignment,
+    #[sea_orm(has_many = "super::service_accounts::Entity")]
+    ServiceAccounts,
 }
 
 impl Related<super::channels_workers::Entity> for Entity {
@@ -41,6 +50,12 @@ impl Related<super::interactions_channels_assignment::Entity> for Entity {
 impl Related<super::queues_channels_assignment::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::QueuesChannelsAssignment.def()
+    }
+}
+
+impl Related<super::service_accounts::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ServiceAccounts.def()
     }
 }
 

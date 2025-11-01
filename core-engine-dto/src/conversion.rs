@@ -1,6 +1,8 @@
+use std::fmt::Debug;
+
 use crate::{
-    ApiResponse, Channel, ChannelWorker, Group, Interaction, Queue, Request, Skill, User,
-    UserState, errors::IcError,
+    ApiResponse, Channel, ChannelWorker, Group, Interaction, Queue, Skill, User, UserState,
+    errors::ApiError,
 };
 use axum::{
     Json,
@@ -18,6 +20,7 @@ use core_engine_db::entities::users::Model as UsersM;
 use core_engine_db::external_entities::user_states_tree_mv::Model as UserStatesTreeM;
 use sea_orm::{ConnectionTrait, TransactionTrait};
 use serde::Serialize;
+use tracing::info;
 
 impl From<QueuesM> for Queue {
     fn from(value: QueuesM) -> Self {
@@ -155,7 +158,7 @@ impl From<ChannelsWorkersM> for ChannelWorker {
     }
 }
 
-impl IntoResponse for IcError {
+impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let status = self.status_code;
         let body = Json(self);
@@ -167,9 +170,9 @@ pub trait IntoApiResponse<T> {
     fn into_api_response(self) -> ApiResponse<T>;
 }
 
-impl<T> IntoApiResponse<T> for Result<T, IcError>
+impl<T> IntoApiResponse<T> for Result<T, ApiError>
 where
-    T: Serialize,
+    T: Serialize + Debug,
 {
     fn into_api_response(self) -> ApiResponse<T> {
         match self {
@@ -179,7 +182,7 @@ where
                 data: Some(data),
             },
             Err(error) => ApiResponse {
-                message: error.message,
+                message: error.message.to_owned(),
                 code: error.status_code,
                 data: None,
             },
@@ -193,7 +196,7 @@ where
 {
     fn into_response(self) -> Response {
         let status = self.code;
-        let body: Json<Option<T>> = Json(self.data);
+        let body: Json<ApiResponse<T>> = Json(self);
         (status, body).into_response()
     }
 }

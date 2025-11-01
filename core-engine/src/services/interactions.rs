@@ -7,7 +7,7 @@ use core_engine_db::entities::interaction_states::Entity as InteractionStatesE;
 use core_engine_db::entities::interactions::{
     ActiveModel as InteractionsActiveModel, Entity as InteractionsEntity,
 };
-use core_engine_dto::{Interaction, Request, errors::IcError};
+use core_engine_dto::{Interaction, errors::ApiError};
 use sea_orm::{
     ActiveModelTrait, ConnectionTrait, DatabaseConnection, EntityTrait, Set, TransactionSession,
     TransactionTrait,
@@ -18,27 +18,33 @@ use tower::util::error::optional::None;
 use tracing::info;
 use uuid::Uuid;
 
-use crate::utils::local_caches::{INTERACTION_STATE_TO_UUID, UUID_TO_INTERACTION_STATE};
-pub async fn get_all(request: Request<()>) -> Result<Vec<Interaction>, IcError> {
+use crate::utils::{
+    axum::InnerRequest,
+    local_caches::{INTERACTION_STATE_TO_UUID, UUID_TO_INTERACTION_STATE},
+};
+
+pub async fn get_all(request: InnerRequest<()>) -> Result<Vec<Interaction>, ApiError> {
     let interactions = InteractionsEntity::find()
-        .all(&request.shared_state.db_pool)
+        .all(request.shared_state.db_pool.as_ref())
         .await?;
     let response: Vec<Interaction> = interactions.into_iter().map(|i| i.into()).collect();
     Ok(response)
 }
 
-pub async fn create(request: Request<Interaction>) -> Result<Interaction, IcError> {
-    let Request {
+pub async fn create(request: InnerRequest<Interaction>) -> Result<Interaction, ApiError> {
+    let InnerRequest {
         id,
         shared_state,
         data,
+        claims,
+        ..
     } = request;
     let data = data.unwrap();
     let tx = shared_state.db_pool.begin().await?;
     ChannelEntity::find_by_id(data.channel.unwrap().id.unwrap())
         .one(&tx)
         .await?
-        .ok_or(IcError {
+        .ok_or(ApiError {
             status_code: StatusCode::BAD_REQUEST,
             message: "channel not found".to_string(),
         })?;
@@ -54,22 +60,19 @@ pub async fn create(request: Request<Interaction>) -> Result<Interaction, IcErro
     Ok(interaction.into())
 }
 
-pub async fn init_interaction_states_local_cache(db: &DatabaseConnection) -> Result<(), IcError> {
+pub async fn init_interaction_states_local_cache(db: &DatabaseConnection) -> Result<(), ApiError> {
     let db_interaction_states = InteractionStatesE::find().all(db).await?;
     let enum_interaction_states = InteractionStates::VARIANTS;
 
     for db_state in db_interaction_states.into_iter() {
         for enum_state in enum_interaction_states.iter() {
             if db_state.name.as_str() == enum_state.to_string() {
-                let start = Instant::now();
                 {
                     INTERACTION_STATE_TO_UUID
                         .write()
                         .await
                         .insert(enum_state.clone(), db_state.id.clone());
                 }
-                let elapsed = start.elapsed();
-                print_dynamic_time(elapsed);
                 {
                     UUID_TO_INTERACTION_STATE
                         .write()
@@ -88,21 +91,4 @@ pub async fn init_interaction_states_local_cache(db: &DatabaseConnection) -> Res
         UUID_TO_INTERACTION_STATE
     );
     Ok(())
-}
-
-fn print_dynamic_time(elapsed: std::time::Duration) {
-    let nanos = elapsed.as_nanos();
-    let micros = elapsed.as_micros();
-    let millis = elapsed.as_millis();
-
-    if nanos < 1_000 {
-        info!("Elapsed: {} ns", nanos);
-    } else if micros < 1_000 {
-        info!("Elapsed: {} µs", micros);
-    } else if millis < 1_000 {
-        info!("Elapsed: {} ms", millis);
-    } else {
-        let secs = elapsed.as_secs_f64();
-        info!("Elapsed: {:.3} s", secs);
-    }
 }

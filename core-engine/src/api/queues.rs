@@ -1,4 +1,7 @@
-use crate::services::queues as QueuesService;
+use crate::{
+    services::queues as QueuesService,
+    utils::axum::{InnerRequest, SharedState, TokenClaims},
+};
 
 use crate::utils::axum::RequestId;
 use axum::routing::{delete, get, post, put};
@@ -7,13 +10,12 @@ use axum::{
     extract::{Path, State},
     http::request,
 };
-use core_engine_dto::{
-    ApiResponse, Interaction, Queue, Request, SharedState, conversion::IntoApiResponse,
-};
+use axum_jwks::Claims;
+use core_engine_dto::{ApiResponse, Interaction, Queue, conversion::IntoApiResponse};
 use std::sync::Arc;
 use uuid::Uuid;
 
-pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
+pub fn routes(api_shared_data: SharedState) -> Router {
     Router::new()
         .route("/queues", get(get_all))
         .route("/queues", post(create))
@@ -29,26 +31,29 @@ pub fn routes(api_shared_data: Arc<SharedState>) -> Router {
 }
 #[debug_handler]
 async fn get_all(
-    state: State<Arc<SharedState>>,
+    Claims(claims): Claims<TokenClaims>,
+    state: State<SharedState>,
     RequestId(request_id): RequestId,
 ) -> ApiResponse<Vec<Queue>> {
-    let dto = Request::new(request_id, None, Arc::clone(&state));
+    let dto = InnerRequest::new(request_id, None, state.0, claims);
     QueuesService::get_all(dto).await.into_api_response()
 }
 
 #[debug_handler]
 async fn create(
-    state: State<Arc<SharedState>>,
+    Claims(claims): Claims<TokenClaims>,
+    state: State<SharedState>,
     RequestId(request_id): RequestId,
     Json(request): Json<Queue>,
 ) -> ApiResponse<Queue> {
-    let dto = Request::new(request_id, Some(request), Arc::clone(&state));
+    let dto = InnerRequest::new(request_id, Some(request), state.0, claims);
     QueuesService::create(dto).await.into_api_response()
 }
 
 #[debug_handler]
 async fn enqueue_interaction(
-    state: State<Arc<SharedState>>,
+    Claims(claims): Claims<TokenClaims>,
+    state: State<SharedState>,
     Path((queue_id, interaction_id)): Path<(Uuid, Uuid)>,
     RequestId(request_id): RequestId,
     Json(request): Json<Interaction>,
@@ -59,7 +64,7 @@ async fn enqueue_interaction(
         ..Default::default()
     });
     request.id = Some(interaction_id);
-    let dto = Request::new(request_id, Some(request), Arc::clone(&state));
+    let dto = InnerRequest::new(request_id, Some(request), state.0, claims);
     QueuesService::enqueue_interaction(dto)
         .await
         .into_api_response()
@@ -67,14 +72,15 @@ async fn enqueue_interaction(
 
 #[debug_handler]
 async fn dequeue_interaction(
-    state: State<Arc<SharedState>>,
+    Claims(claims): Claims<TokenClaims>,
+    state: State<SharedState>,
     Path(interaction_id): Path<Uuid>,
     RequestId(request_id): RequestId,
     Json(request): Json<Interaction>,
 ) -> ApiResponse<Interaction> {
     let mut request = request;
     request.id = Some(interaction_id);
-    let dto = Request::new(request_id, Some(request), Arc::clone(&state));
+    let dto = InnerRequest::new(request_id, Some(request), state.0, claims);
     QueuesService::dequeue_interaction(dto)
         .await
         .into_api_response()

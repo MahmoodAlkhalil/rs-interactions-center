@@ -16,9 +16,10 @@ pub struct Model {
     pub nkey_seed: String,
     #[sea_orm(column_type = "Text", unique)]
     pub nkey_pub: String,
-    pub service_account: bool,
     pub created_at: DateTimeWithTimeZone,
     pub mark_for_delete: bool,
+    #[sea_orm(column_type = "Text")]
+    pub nats_jwt: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

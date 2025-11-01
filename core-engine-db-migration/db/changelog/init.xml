@@ -1,0 +1,780 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    <changeSet author="laudatur (generated)" id="1761623909179-1">
+        <createTable tableName="interaction_states">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="interaction_states_pkey" />
+            </column>
+            <column name="name" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="TEXT" />
+            <column defaultValueBoolean="false" name="system_state" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur" id="insert_interaction_states">
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="New" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Enqueued" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Dequeued" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Presenting" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Active" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Disconnected" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Wrap Up" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Closed" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="interaction_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Unknown" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <rollback> DELETE FROM interaction_states WHERE name IN ( 'New', 'Enqueued', 'Dequeued',
+            'Presenting', 'Active', 'Disconnected', 'Wrap Up', 'Closed', 'Unknown' ); </rollback>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-2">
+        <createTable tableName="user_states">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="user_states_pkey" />
+            </column>
+            <column name="name" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="TEXT" />
+            <column name="parent_id" type="UUID" />
+            <column defaultValueBoolean="false" name="mark_for_delete" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueBoolean="false" name="system_state" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueBoolean="true" name="user_control_allowed" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur" id="insert_user_states">
+        <insert tableName="user_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Offline" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="user_control_allowed" valueBoolean="false" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="user_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Not Ready" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="user_control_allowed" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="user_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Ready" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="user_control_allowed" valueBoolean="true" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="user_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Presenting" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="user_control_allowed" valueBoolean="false" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="user_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Interacting" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="user_control_allowed" valueBoolean="false" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="user_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Fully Occupied" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="user_control_allowed" valueBoolean="false" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="user_states">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Unknown" />
+            <column name="system_state" valueBoolean="true" />
+            <column name="user_control_allowed" valueBoolean="false" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <rollback> DELETE FROM user_states WHERE name IN ( 'Offline', 'Not Ready', 'Ready',
+            'Presenting', 'Interacting', 'Fully Occupied', 'Unknown' ); </rollback>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-3">
+        <createTable tableName="channels">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="channels_pkey" />
+            </column>
+            <column name="name" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="TEXT" />
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueBoolean="false" name="mark_for_delete" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+            <column name="nkey_seed" type="TEXT"> </column>
+            <column name="nkey_pub" type="TEXT"> </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur" id="insert_channels">
+        <insert tableName="channels">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="Voice" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <rollback> DELETE FROM channels WHERE name IN ( 'Voice' ); </rollback>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-4">
+        <createTable tableName="channels_workers">
+            <column name="id" type="CHAR(10)">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="channels_workers_pkey" />
+            </column>
+            <column name="state" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="channel_id" type="UUID">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="update_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueBoolean="false" name="disable" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-5">
+        <createTable tableName="groups">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="groups_pkey" />
+            </column>
+            <column name="name" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="description" type="TEXT" />
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueBoolean="false" name="mark_for_delete" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-6">
+        <createTable tableName="interactions">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="interactions_pkey" />
+            </column>
+            <column name="state" type="UUID">
+                <constraints nullable="false" />
+            </column>
+            <column name="channel" type="UUID">
+                <constraints nullable="false" />
+            </column>
+            <column name="channel_worker" type="UUID">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-7">
+        <createTable tableName="skills">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="skills_pkey" />
+            </column>
+            <column name="name" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column name="parent_id" type="UUID" />
+            <column defaultValueBoolean="false" name="mark_for_delete" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-8">
+        <createTable tableName="users">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="users_pkey" />
+            </column>
+            <column name="username" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="name" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="state" type="UUID">
+                <constraints nullable="false" />
+            </column>
+            <column name="nkey_seed" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="nkey_pub" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueBoolean="false" name="mark_for_delete" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur" id="create_service_accounts">
+        <createTable tableName="service_accounts">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="service_accounts_pkey" />
+            </column>
+            <column name="name" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column name="channel_id" type="UUID" />
+            <column defaultValueBoolean="false" name="channel_service" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+            baseTableName="service_accounts"
+            baseColumnNames="channel_id"
+            referencedTableName="channels"
+            referencedColumnNames="id"
+            constraintName="fk_service_accounts_channel" />
+        <rollback>
+            <dropTable tableName="service_accounts" />
+        </rollback>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-9">
+        <createTable tableName="queues">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="queues_pkey" />
+            </column>
+            <column name="name" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueBoolean="false" name="mark_for_delete" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur" id="insert_queues">
+        <insert tableName="queues">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="voice queue 1" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="queues">
+            <column name="id" valueComputed="gen_random_uuid()" />
+            <column name="name" value="voice queue 2" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <rollback> DELETE FROM queues WHERE name IN ('voice queue 1', 'voice queue 2'); </rollback>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-10">
+        <createTable tableName="interactions_events">
+            <column autoIncrement="true" name="internal_id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="interactions_events_pkey" />
+            </column>
+            <column name="id" type="UUID">
+                <constraints nullable="false" />
+            </column>
+            <column name="type" type="INTEGER">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column name="old_state" type="UUID" />
+            <column name="new_state" type="UUID" />
+            <column name="queue_id" type="UUID" />
+            <column name="user_id" type="UUID" />
+            <column name="channel_id" type="UUID" />
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-11">
+        <createTable tableName="interactions_channels_assignment">
+            <column name="interaction_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="interactions_channels_assignment_pkey" />
+            </column>
+            <column name="channel_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="interactions_channels_assignment_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-12">
+        <createTable tableName="interactions_skills_assignment">
+            <column name="interaction_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="interactions_skills_assignment_pkey" />
+            </column>
+            <column name="skill_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="interactions_skills_assignment_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-13">
+        <createTable tableName="queues_channels_assignment">
+            <column name="queue_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="queues_channels_assignment_pkey" />
+            </column>
+            <column name="channel_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="queues_channels_assignment_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur" id="assign_queues_to_voice_channel">
+        <insert tableName="queues_channels_assignment">
+            <column name="queue_id"
+                valueComputed="(SELECT id FROM queues WHERE name = 'voice queue 1')" />
+            <column name="channel_id" valueComputed="(SELECT id FROM channels WHERE name = 'Voice')" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <insert tableName="queues_channels_assignment">
+            <column name="queue_id"
+                valueComputed="(SELECT id FROM queues WHERE name = 'voice queue 2')" />
+            <column name="channel_id" valueComputed="(SELECT id FROM channels WHERE name = 'Voice')" />
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP" />
+        </insert>
+        <rollback> DELETE FROM queues_channels_assignment WHERE queue_id IN (SELECT id FROM queues
+            WHERE name IN ('voice queue 1', 'voice queue 2')) AND channel_id = (SELECT id FROM
+            channels WHERE name = 'Voice'); </rollback>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-14">
+        <createTable tableName="queues_groups_assignment">
+            <column name="queue_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="queues_groups_assignment_pkey" />
+            </column>
+            <column name="group_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="queues_groups_assignment_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-15">
+        <createTable tableName="runtime_interactions_queues">
+            <column name="queue_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="runtime_interactions_queues_pkey" />
+            </column>
+            <column name="interaction_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="runtime_interactions_queues_pkey" />
+            </column>
+            <column name="priority" type="INTEGER">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="queued_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-16">
+        <createTable tableName="runtime_users">
+            <column name="id" type="UUID">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="runtime_users_pkey" />
+            </column>
+            <column name="state" type="UUID">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="state_updated_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-17">
+        <createTable tableName="runtime_users_queues">
+            <column name="queue_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="runtime_users_queues_pkey" />
+            </column>
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="runtime_users_queues_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="queued_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+            <column defaultValueBoolean="false" name="on_queue" type="BOOLEAN">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-18">
+        <createTable tableName="skills_groups_assignment">
+            <column name="skill_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="skills_groups_assignment_pkey" />
+            </column>
+            <column name="group_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="skills_groups_assignment_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-19">
+        <createTable tableName="users_groups_assignment">
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="users_groups_assignment_pkey" />
+            </column>
+            <column name="group_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="users_groups_assignment_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-20">
+        <createTable tableName="users_queues_assignment">
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="users_queues_assignment_pkey" />
+            </column>
+            <column name="queue_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="users_queues_assignment_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-21">
+        <createTable tableName="users_skills_assignment">
+            <column name="user_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="users_skills_assignment_pkey" />
+            </column>
+            <column name="skill_id" type="UUID">
+                <constraints nullable="false" primaryKey="true"
+                    primaryKeyName="users_skills_assignment_pkey" />
+            </column>
+            <column defaultValueComputed="CURRENT_TIMESTAMP" name="created_at"
+                type="TIMESTAMP WITH TIME ZONE">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-22">
+        <createTable tableName="system_params">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="system_params_pkey" />
+            </column>
+            <column name="key" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+            <column name="val" type="TEXT">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-23">
+        <addUniqueConstraint columnNames="name" constraintName="interaction_states_name_key"
+            tableName="interaction_states" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-24">
+        <addUniqueConstraint columnNames="name" constraintName="user_states_name_key"
+            tableName="user_states" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-25">
+        <addUniqueConstraint columnNames="name" constraintName="channels_name_key"
+            tableName="channels" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-26">
+        <addUniqueConstraint columnNames="name" constraintName="groups_name_key" tableName="groups" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-27">
+        <addUniqueConstraint columnNames="name" constraintName="users_name_key" tableName="users" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-28">
+        <addUniqueConstraint columnNames="nkey_pub" constraintName="users_nkey_pub_key"
+            tableName="users" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-29">
+        <addUniqueConstraint columnNames="nkey_seed" constraintName="users_nkey_seed_key"
+            tableName="users" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-30">
+        <addUniqueConstraint columnNames="name" constraintName="queues_name_key" tableName="queues" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-31">
+        <addUniqueConstraint columnNames="key" constraintName="system_params_key_key"
+            tableName="system_params" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-32">
+        <addForeignKeyConstraint baseColumnNames="channel_id" baseTableName="channels_workers"
+            constraintName="channels_workers_channel_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="channels" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-33">
+        <addForeignKeyConstraint baseColumnNames="channel_id"
+            baseTableName="interactions_channels_assignment"
+            constraintName="fk_interactions_channels_assignment_channel_id" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="channels" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-34">
+        <addForeignKeyConstraint baseColumnNames="interaction_id"
+            baseTableName="interactions_channels_assignment"
+            constraintName="fk_interactions_channels_assignment_interaction_id" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="interactions" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-35">
+        <addForeignKeyConstraint baseColumnNames="interaction_id"
+            baseTableName="interactions_skills_assignment"
+            constraintName="fk_interactions_skills_assignment_interaction_id" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="interactions" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-36">
+        <addForeignKeyConstraint baseColumnNames="skill_id"
+            baseTableName="interactions_skills_assignment"
+            constraintName="fk_interactions_skills_assignment_skill_id" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="skills" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-37">
+        <addForeignKeyConstraint baseColumnNames="channel_id"
+            baseTableName="queues_channels_assignment"
+            constraintName="fk_queues_channels_assignment_channel_id" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="channels" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-38">
+        <addForeignKeyConstraint baseColumnNames="queue_id"
+            baseTableName="queues_channels_assignment"
+            constraintName="fk_queues_channels_assignment_queue_id" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="queues" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-39">
+        <addForeignKeyConstraint baseColumnNames="queue_id" baseTableName="queues_groups_assignment"
+            constraintName="fk_queues_groups_assignment_queue_id" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="queues" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-40">
+        <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="queues_groups_assignment"
+            constraintName="queues_groups_assignment_group_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="groups" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-41">
+        <addForeignKeyConstraint baseColumnNames="interaction_id"
+            baseTableName="runtime_interactions_queues"
+            constraintName="runtime_interactions_queues_interaction_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="interactions" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-42">
+        <addForeignKeyConstraint baseColumnNames="queue_id"
+            baseTableName="runtime_interactions_queues"
+            constraintName="runtime_interactions_queues_queue_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="queues" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-43">
+        <addForeignKeyConstraint baseColumnNames="id" baseTableName="runtime_users"
+            constraintName="runtime_users_id_fkey" deferrable="false" initiallyDeferred="false"
+            onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id"
+            referencedTableName="users" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-44">
+        <addForeignKeyConstraint baseColumnNames="queue_id" baseTableName="runtime_users_queues"
+            constraintName="runtime_users_queues_queue_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="queues" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-45">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="runtime_users_queues"
+            constraintName="runtime_users_queues_user_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="users" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-46">
+        <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="skills_groups_assignment"
+            constraintName="skills_groups_assignment_group_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="groups" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-47">
+        <addForeignKeyConstraint baseColumnNames="skill_id" baseTableName="skills_groups_assignment"
+            constraintName="skills_groups_assignment_skill_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="skills" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-48">
+        <addForeignKeyConstraint baseColumnNames="parent_id" baseTableName="skills"
+            constraintName="skills_parent_id_fkey" deferrable="false" initiallyDeferred="false"
+            onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id"
+            referencedTableName="skills" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-49">
+        <addForeignKeyConstraint baseColumnNames="parent_id" baseTableName="user_states"
+            constraintName="user_states_parent_id_fkey" deferrable="false" initiallyDeferred="false"
+            onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id"
+            referencedTableName="user_states" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-50">
+        <addForeignKeyConstraint baseColumnNames="group_id" baseTableName="users_groups_assignment"
+            constraintName="users_groups_assignment_group_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="groups" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-51">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="users_groups_assignment"
+            constraintName="users_groups_assignment_user_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="users" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-52">
+        <addForeignKeyConstraint baseColumnNames="queue_id" baseTableName="users_queues_assignment"
+            constraintName="users_queues_assignment_queue_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="queues" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-53">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="users_queues_assignment"
+            constraintName="users_queues_assignment_user_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="users" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-54">
+        <addForeignKeyConstraint baseColumnNames="skill_id" baseTableName="users_skills_assignment"
+            constraintName="users_skills_assignment_skill_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="skills" validate="true" />
+    </changeSet>
+    <changeSet author="laudatur (generated)" id="1761623909179-55">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="users_skills_assignment"
+            constraintName="users_skills_assignment_user_id_fkey" deferrable="false"
+            initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+            referencedColumnNames="id" referencedTableName="users" validate="true" />
+    </changeSet>
+</databaseChangeLog>

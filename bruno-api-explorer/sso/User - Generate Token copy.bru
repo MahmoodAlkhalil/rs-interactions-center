@@ -1,0 +1,24 @@
+meta {
+  name: User - Generate Token copy
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{SSO_BASE_URL}}/realms/rsic/protocol/openid-connect/token
+  body: formUrlEncoded
+  auth: inherit
+}
+
+body:form-urlencoded {
+  grant_type: password
+  username: dummy@dummy.non
+  password: Hala_1994
+  scope: openid profile email
+  client_id: 563eb639-bcb3-4548-9acd-e60361022445
+  client_secret: VhrtiFEstaD1G7pVctzSLMAYUwAItNaa
+}
+
+settings {
+  encodeUrl: true
+}

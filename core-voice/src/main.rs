@@ -1,13 +1,43 @@
-use core_engine_dto::errors::IcError;
-use tracing::Level;
+use core_engine_dto::errors::ApiError;
+use tokio_util::sync::CancellationToken;
+use tracing::{Level, warn};
 
-use crate::processes::{local_db::init_kv_local_db, nats::init_nats_client};
-mod processes;
+use crate::{
+    api::ApiClient,
+    nats::create_client,
+    worker::{Worker, start},
+};
+
+mod api;
+mod nats;
+mod worker;
+
 #[tokio::main]
-async fn main() -> Result<(), IcError> {
-    dotenv::from_filename(".env.core-voice").ok();
-    tracing_subscriber::fmt().with_max_level(Level::INFO).init();
-    init_kv_local_db().await?;
-    init_nats_client().await?;
+async fn main() -> Result<(), ApiError> {
+    let env_file = if cfg!(debug_assertions) {
+        ".env.core-voice"
+    } else {
+        ".env"
+    };
+    dotenv::from_filename(env_file).ok();
+    tracing_subscriber::fmt()
+        .with_max_level(Level::TRACE)
+        .init();
+
+    let api_client = ApiClient::new().await?;
+    let nats_client = create_client().await?;
+    let cancelation_token = CancellationToken::new();
+    let channel = api_client.get_channel().await?;
+    let worker = Worker::new(nats_client, api_client, cancelation_token.clone(), channel);
+
+    tokio::select! {
+        _ = tokio::signal::ctrl_c() => {
+            warn!("ctl+c!");
+            cancelation_token.cancel();
+        },
+        _ = start(worker) => {
+            warn!("worker loop exited");
+        },
+    }
     Ok(())
 }

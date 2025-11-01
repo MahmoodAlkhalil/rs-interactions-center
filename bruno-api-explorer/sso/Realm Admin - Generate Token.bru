@@ -1,0 +1,21 @@
+meta {
+  name: Realm Admin - Generate Token
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{SSO_BASE_URL}}/realms/rsic/protocol/openid-connect/token
+  body: formUrlEncoded
+  auth: inherit
+}
+
+body:form-urlencoded {
+  grant_type: client_credentials
+  client_id: f904bbf8-4bdc-4831-aca5-10f5b0832f13
+  client_secret: EZEiK2cnb1OKocbSufSAc4I7hD02MQVs
+}
+
+settings {
+  encodeUrl: true
+}
